@@ -1,126 +1,112 @@
 /* *********************************************
  *              selfIQ 2026-2
  *
- * @autor erik garcia chavez 
- * @date octuber 2026 
- * @assginature : proyecto de carrera 
- * @teacher : isabel rocha garcia 
+ * @autor Erik Garcia Chavez
+ * @date octuber 2026
+ * @assginature : proyecto de carrera
+ * @teacher : Jose Isabel Garcia Rocha
  *
  ************************************************* */
 
 #ifndef GLOBAL_H
 #define GLOBAL_H
-
-#include "driver/uart.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
-//macros 
+// macros
 #define TRUE 1
 #define FALSE 0
-#define RPI_IP "148.168.0.1" // aun no ponemos la IP correcta por defecto
-#define RPI_PORT "50007"
 
-
+#define HEADER 0xABCD
+#define ACK 0x5433
+#define MAX_DATA 95
+#define SSID_LEN_MAX 33
+#define PSWD_LEN_MAX 26
+#define USER_LEN_MAX 31
 
 //+++++++++++++++++++++++++++++ Bits del grupo de eventos
-//WIFI
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT BIT1
-#define WIFI_UPDATE BIT10
-#define BREAK_UPDATE_WIFI BIT11
-#define WIFI_CREDS_READY BIT12
-#define BROKER_RECEIVED BIT3 // usado para ACK de SET_WIFI 
-#define WIFI_CREDS_RECEIVED BIT13 // la peticion TCP recibio las credenciales con extoito: SSID/PSWD
-//socket TCP
-#define LOGIN_SUCCESS BIT4
-#define LOGIN_FAIL    BIT3
-
-
-                                  
-                                  
-
-
+// la peticion TCP recibio las credenciales con extoito: SSID/PSWD
+// socket TCP
 
 //++++++++++++++++++++++++++++++Constantes generales
+extern QueueHandle_t tcp_rx_queue;
 
 //+++++++++++++++++++++++++++ Estructuras
 
-// estrucutras para controlar los diferenites elementos tanto para redes wifi de casa como redes de empresa 
-// esto especialemntepara conectarnos a la red de UABC.
-typedef struct {
-  const char *alias;
-  const char *ssid;
-  const char *pswd;
-} wifi_default_profile_t;
-
-typedef struct {
-  const char *alias;
-  const char *ssid;
-  const char *user;
-  const char *pswd;
-} wifi_default_ent_profile_t;
-
-extern char g_wifi_ssid[33];
-extern char g_wifi_pass[65];
-extern char g_broker_ip[16];
-
 // estrucutras trama socket TCP
 
+// sera el tipo que operacion que ser, mantenemos ACK y NACK para mas
+// infromacion sobre si llegaron las peticiones o no
+typedef enum {
+  OPReqCredWifi = 0x00, // L:S
+  OP_ACK,               // ACK
+  OP_NACK,              // NACK
+} TYPE_OP_TYPE_T;
+extern TYPE_OP_TYPE_T op_type;
 
-// sera el tipo que operacion que ser, mantenemos ACK y NACK para mas infromacion sobre si llegaron las peticiones o no
-typedef enum{
-    OP_LOGIN,       // L:S
-    OP_ACK,         // ACK
-    OP_NACK,        // NACK
-}op_type_t;
-extern op_type_t op_type;
+// accion que queremos haacer entre la ESP32 y la RPI, por el momento solo se
+// tiene para hacer login
+typedef enum {
+  action_none = 0x00,
+  eReqWifi, // soliciar credeniclaes WIFI a la RPI.
+  eRespWifi,
+  keepAlive = 0x5,
+} ACTION_T;
 
+extern ACTION_T action;
 
-//accion que queremos haacer entre la ESP32 y la RPI, por el momento solo se 
-//tiene para hacer login 
-typedef enum{
-  action_none  = 0x00,
-	req_cred_rpi = 0x1, // soliciar credeniclaes WIFI a la RPI. 
-	keep_alive = 0x5,
-}action_t;
+typedef enum {
+  eNoType = 0x00,
+  eWifiDefault,
+  eWifiEnterprise,
+  eRespACK,
+} TYPE_FRAME_T;
+extern TYPE_FRAME_T type_frame;
 
-extern action_t action;
+typedef enum {
+  eDataSSID = 0x69, // para las 2 tipo de redes sera este mimso id para inidcar
+                    // el inicio
+  eDataPSWD = 0x70, // igual
+  eDataUSR = 0x75,  // solo en el caso de empresa se usara este.
+} DATA_FIELD_T;
 
-typedef enum{
-    server = 0xf,
-}resourse_t;
-extern resourse_t resourse;
-
-
-/*
- * @brief establece la estrucutra del frame entre peticiones y respuesta de ESP con rasbery pi. para peticiones de credenicales
- * de WIFI y otros proceso que se pueda emplear.
+/*************************************************************
+ * @brief establece la estrucutra del frame entre peticiones y respuesta de ESP
+ * con rasbery pi. para peticiones de credenicales de WIFI y otros proceso que
+ * se pueda emplear.
  *
- * @miember header: cabecera del frame indicando que se esta enviando, 
+ * @member header: cabecera del frame indicando que se esta enviando,
  *    --> lo cuales puede ser:
  *          Peticion : 0x0
  *          Error (NACK) : 0xCAFE
- * @miember len : tamanio completo del frame 
- * @miember action : que accion queremos hacer con la rpi cunado esta en mood AP 
+ * @member len : tamanio completo del frame
+ * @member action : que accion queremos hacer con la rpi cunado esta en mood AP
  *    --> puede ser, del enum < action >
+ * @member type_frame :
+ * @member type_red : si la red es privada o de empresa
+ *   --> para empresa se requiere SSID, user y pswd del usuario
+ *   --> para red privada solo SSID y pswd de la red
+ * @member ssid : nombre de la red
+ * @member pswd : contrasenia de la red o contrasenia de la red
+ * @member user_network: usuario de la empresa
  *
- * **/
+ *********************************************************/
 
-typedef struct{
-    uint16_t header; // >> head of frame  
-    uint8_t len; // >> lenght of frame  
-    action_t action:4;
-    resourse_t resourse:4;
+typedef struct {
+  uint16_t header; // >> head of frame
+  uint8_t len;     // >> lenght of frame
+  TYPE_FRAME_T type_frame : 4;
+  ACTION_T action : 4;
+  uint8_t data[MAX_DATA];
+} TYPE_FORMAT_REQUEST_T;
 
-}format_request_t;
+typedef struct {
+  TYPE_OP_TYPE_T op_type;               // que operacion vamos a relaizar
+  TYPE_FORMAT_REQUEST_T format_request; // trametos la trama a enviar
+} TYPE_SEND_INFO_T;
 
+extern TYPE_SEND_INFO_T send_info;
 
-
-
-// ++++++++++++++++++++++++++++++++++++++ prototipo de funciones 
-
-extern esp_err_t nvs_save_str(const char *key, const char *value);
-extern esp_err_t nvs_load_str(const char *key, char *buf, size_t len);
+// ++++++++++++++++++++++++++++++++++++++ prototipo de funciones
 
 #endif

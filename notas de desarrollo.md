@@ -54,10 +54,39 @@ pero estas deben de estar cifradas, las vamos a hardcodear, entnces estaran cifr
 --> lo de accion podemos mantenerlos, porque podemos enviar que queremoes solciitrar crecedenciales puede funcionar para otras cosas mantener esta estrucutra de tener un espacio para indicar lo que se requiere hacer, aunque por ahora solo sera login, despes podremos meter algo mas. 
 
 
+--> esto sera cunado enviemos  o si la RPI solicita algo a la ESP32, por socket. 
+ | HEADER | LEN | TYPE_FRAME |ACTION  | DATA |
 
- | HEADER | LEN | |ACTION |TYPE_RED| SSID | PWD | USER
+dejaremos el socket un poco general, lo que quiere decir que, vamos a dejar la posibilidad de poder relizar mas que solo la conexion, creo que es lo mas adecuado 
 
-USER -> es solo si la red es de tipo empresa 
+
+**respuesta desde la RPI -> ESP32 o  ESP32->RPI**
+
+*necesitaremos *
+
+|ACK| LEN | ACTION |TYPE_FRAME| DATA |
+
+|NACK| LEN | ACTION |TYPE_FRAME| DATA |
+|NACK| 0xFF | F |F| 0 | -> esto es lo que consta NACK 
+
+
+
+entonces para :
+
+ACTION : indicaremos que se realizara, una peticion a la RPI o alguna otra operacion que requeramos de la RPI, 
+
+TYPE_FRAME_T : indicara que tipo de frame es 
+			
+		 0 : no tipo, porque estamos solicitando ESP32 -> rpi
+		 1 : para credeniclaes WIFI normales RPI -> ESP32
+		 2:  para credeniciales WIFI de empresa RPI -> ESP32 (esto por ahora )
+
+*formato en como llegan las credenciales*
+frame->data = |id_ssid| |len |SSID| |id_pswd|| len |data|   -> para redes normales provadas
+
+rame->data = |id_ssid |len |SSID | id_pswd | len | data |id_usr | len |data -> este para redes de empresas. sera el mas largo, y el que creo no usar tanto, quiero probar en UABC.  
+
+
 
 
 
@@ -74,4 +103,17 @@ no lo eliminare del todo, lo comentare UART solo puede funcionar de manera de de
 
 
 
+---
+## DEBUG DE LOS PROGRSMAS ESP32 
+
+
+el problema que estoy vinedo con los esp32, es en el caso de tener fallos, tener que ver que es lo fallo, puede ser un problema dado que no tiene salida por pantalla o algun lado que se pueda comunicar. una razon se me ocurre es por medio de **LEDS** de algunso colores, puede ser varios o 1 solo RGB indicando por medio de colores que puede ser el fallo. 
+
+
+
+---
+
+# nos quedamos 
+
+actualiamos el frame cambiando TYPE_FRAME antes que accion, asi podemos descartar posibles acciones y conocer el tipo de frame que viene.
 

@@ -1,0 +1,43 @@
+Command: ninja all
+fatal: detected dubious ownership in repository at '/opt/esp-idf'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /opt/esp-idf
+Configuration Report                                                                                                
+ ────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+   Parser Version: 1                                                                                                
+   Verbosity: default                                                                                               
+   Defaults policy: sdkconfig                                                                                       
+   Status: Finished with notifications                                                                              
+                                                                                                                    
+  Miscellaneous                                                                                                     
+   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────   
+    * BT_NIMBLE_MESH_PROVISIONER (defined at /opt/esp-idf/components/bt/host/nimble/Kconfig.in:1421): 'default      
+    0' is not a valid bool value (only 'y' and 'n' are allowed). Value is treated as 'n'.                           
+    * BTDM_CTRL_LEGACY_AUTH_VENDOR_EVT_EFF (defined at                                                              
+    /opt/esp-idf/components/bt/controller/esp32/Kconfig.in:177): 'default 0' is not a valid bool value (only 'y'    
+    and 'n' are allowed). Value is treated as 'n'.                                                                  
+    * FATFS_PRINT_LLI (defined at /opt/esp-idf/components/fatfs/Kconfig:230): 'default 0' is not a valid bool       
+    value (only 'y' and 'n' are allowed). Value is treated as 'n'.                                                  
+    * FATFS_PRINT_FLOAT (defined at /opt/esp-idf/components/fatfs/Kconfig:235): 'default 0' is not a valid bool     
+    value (only 'y' and 'n' are allowed). Value is treated as 'n'.                                                  
+   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────   
+ ────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+fatal: detected dubious ownership in repository at '/opt/esp-idf'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /opt/esp-idf
+fatal: detected dubious ownership in repository at '/opt/esp-idf/components/openthread/openthread'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /opt/esp-idf/components/openthread/openthread
+CMake Error at /opt/esp-idf/tools/cmake/component.cmake:321 (message):
+  Include directory
+  '/home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/main/modules/UART'
+  is not a directory.
+Call Stack (most recent call first):
+  /opt/esp-idf/tools/cmake/component.cmake:496 (__component_add_include_dirs)
+  main/CMakeLists.txt:1 (idf_component_register)
+
+
+ninja: error: rebuilding 'build.ninja': subcommand failed
