@@ -18,7 +18,9 @@
 // +++ default IP - rasberry pi
 
 #define RPI_IP_SETUP "192.158.50.1"
-#define RPI_PORT_SETUP "5000"
+#define RPI_PORT_SETUP 5000
+
+// #define UINT16_MAX 65535
 
 //+++ bit de grupo de eventos
 
@@ -56,6 +58,21 @@ esp_err_t tcp_cliente_init();
  *
  */
 esp_err_t send_message();
+
+/*
+ * @brief funcion encargada de actualizar y cargar las credenucales TCP para la
+ * comunicacion con RPI o algun otro servidor
+ * @param ip ip a servidor a comunicarse
+ * @port port puerto al cual se comunicara
+ *
+ * @return ESP_ERR_NO_MEM si al reservar memoria para IP, no se puede reservar
+ * @return ESP_ERR_INVALID_ARG si los valores que se pasan a la funcion son
+ * incorrectos
+ *
+ * @return ESP_OK si se pudo estabelcer las credeniclaes
+ * */
+
+esp_err_t update_tcp_config(const char *ip, uint16_t port);
 
 //++++++++++++++++++++ tareas
 

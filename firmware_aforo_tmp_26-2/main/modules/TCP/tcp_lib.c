@@ -10,7 +10,6 @@
 #include "lwip/netdb.h"
 #include "lwip/sockets.h"
 #include <errno.h>
-#include <linux/limits.h>
 #include <string.h>
 
 #include <freertos/FreeRTOS.h>
@@ -24,7 +23,7 @@
 #include "global.h"
 #include "tcp_lib.h"
 
-const char *TAG = "TCP_CLIENT: ";
+static const char *TAG = "TCP_CLIENT: ";
 
 esp_err_t tcp_cliente_init() {
 
@@ -114,12 +113,135 @@ esp_err_t tcp_cliente_init() {
   return ESP_FAIL;
 }
 
+/**
+ *
+ * funcion encargada de enviar datos hacia la RPI con la que se va a solicitar
+ * recursos o algun datos que esta en ella.
+ *
+ * @UPDATE necesitamos modificar para la nueva estrucutra que necesitamos para
+ * solcitar recursos por medio de SOCKET
+ *
+ */
+esp_err_t send_message() {
+
+  // lo maximo que puede enviar son 40 bytes estos puede variar
+  uint8_t buffer[160]; // aun esoty decidenido cual es tamanio optimo, por
+                       // mientras lo dejaremos asi.
+  int offset = 0;
+
+  //@DEBUG
+  char hex_buf[128] = {0};
+  int pos = 0;
+
+  switch (send_info.op_type) {
+
+  case OPReqCredWifi: {
+
+    uint16_t id = htons(HEADER);
+    memcpy(buffer + offset, &id, 2);
+    offset += 2;
+    // len of frame
+    // son 2 bytes porque ACTION + TYPE_FRAME = 1 byte
+    // DATA 1 byte aunque es cero pero es un espacio dentro del frame
+    // especialmente para ese dato
+    // en len no cuenta ni el < HEADER > ni el pripio < len> .
+    buffer[offset] = 2;
+    offset++;
+
+    // TYPE_FRAME + ACTION - son uno mismo con 1 nibble son 16 posibilidades
+    // de cada uno,
+
+    uint8_t req_cred = (eNoType << 4) | eReqWifi;
+    buffer[offset++] = req_cred;
+
+    // memset(buffer + offset, 0, MAX_DATA); // ponemos la parte de data en 0.
+    buffer[offset++] = 0;
+  } break;
+  case OP_ACK: {
+
+    /*
+     * el ACK le va a indicar a la rasberry que este ESP32, ya recibio las
+     * credenicales pero aun no podemos saber si son las correctas, porque
+     * primero necesitamos descoenctarnos de la AP actual para inciar en el
+     * WIFI normal
+     *
+     * */
+
+    uint16_t id = htons(ACK);
+    memcpy(buffer + offset, &id, 2);
+    offset += 2;
+
+    buffer[offset++] = 2; // 2 bytes de transferencia
+    buffer[offset++] = (eRespACK << 4) | action_none; // 0003 0000
+    buffer[offset++] = 1; // solo para diferenicar del NACK
+
+  } break;
+  case OP_NACK: {
+
+    uint16_t id = htons(ACK);
+    memcpy(buffer + offset, &id, 2);
+    offset += 2;
+    buffer[offset] = 0xFF;
+    offset++;
+    buffer[offset++] = 0xFF; // accion y tipo en maximo indciando error.
+    buffer[offset++] = 0;
+  } break;
+
+  default: {
+    ESP_LOGI(TAG, "OPCION INCORRECTA: ");
+  } break;
+  }
+  int sent = send(tcp_client.sock, buffer, offset, 0);
+  if (sent < 0) {
+    ESP_LOGE(TAG, "\r\nsend() fallo errno: %d\r\n", errno);
+
+    return ESP_FAIL;
+  }
+  for (int i = 0; i < offset; i++) {
+    pos += snprintf(hex_buf + pos, sizeof(hex_buf) - pos, "%02X ", buffer[i]);
+  }
+
+  ESP_LOGI(TAG, "DEBUG - FRAME SEND: %s", hex_buf);
+  return ESP_OK;
+}
+
+esp_err_t update_tcp_config(const char *ip, uint16_t port) {
+
+  if (ip == NULL || port == 0)
+    return ESP_ERR_INVALID_ARG;
+
+  // Verificar que la dirección IPv4 sea válida
+  struct in_addr addr;
+
+  if (inet_pton(AF_INET, ip, &addr) != 1)
+    return ESP_ERR_INVALID_ARG;
+
+  // Reservar memoria para la IP
+  char *new_ip = malloc(strlen(ip) + 1);
+
+  if (new_ip == NULL)
+    return ESP_ERR_NO_MEM;
+
+  strcpy(new_ip, ip);
+
+  // Liberar configuración anterior
+  free(tcp_client.host_ip);
+
+  // Actualizar estructura TCP
+  tcp_client.host_ip = new_ip;
+  tcp_client.host_port = port;
+
+  tcp_client.connected = 0;
+  tcp_client.logged_in = 0;
+
+  return ESP_OK;
+}
+
 // debemos de limpiar y actualizar con las estrucutra nueva de nuestro frame
 // para la comnicacion con la RPI
 
 void recv_task(void *params) {
   uint8_t rx_buffer[MAX_DATA];
-  uint8_t *buffer_tmp;
 
   while (1) {
     char hex_buf[128] = {0};
@@ -132,7 +254,7 @@ void recv_task(void *params) {
         continue;
       }
 
-      ESP_LOGE(TAG, "\r\nTCP_LIB: recv fallo errno: %d\r\n",  errno));
+      ESP_LOGE(TAG, "\r\nTCP_LIB: recv fallo errno: %d\r\n", errno);
       tcp_client.connected = 0;
       tcp_client.logged_in = 0;
       if (tcp_client.sock >= 0) {
@@ -247,98 +369,4 @@ void recv_task(void *params) {
       vPortFree(frame);
     }
   }
-}
-
-/**
- *
- * funcion encargada de enviar datos hacia la RPI con la que se va a solicitar
- * recursos o algun datos que esta en ella.
- *
- * @UPDATE necesitamos modificar para la nueva estrucutra que necesitamos para
- * solcitar recursos por medio de SOCKET
- *
- */
-esp_err_t send_message() {
-
-  // lo maximo que puede enviar son 40 bytes estos puede variar
-  uint8_t buffer[160]; // aun esoty decidenido cual es tamanio optimo, por
-                       // mientras lo dejaremos asi.
-  int offset = 0;
-  int len;
-
-  //@DEBUG
-  char hex_buf[128] = {0};
-  int pos = 0;
-
-  switch (send_info.op_type) {
-
-  case OPReqCredWifi: {
-
-    uint16_t id = htons(HEADER);
-    memcpy(buffer + offset, &id, 2);
-    offset += 2;
-    // len of frame
-    // son 2 bytes porque ACTION + TYPE_FRAME = 1 byte
-    // DATA 1 byte aunque es cero pero es un espacio dentro del frame
-    // especialmente para ese dato
-    // en len no cuenta ni el < HEADER > ni el pripio < len> .
-    buffer[offset] = 2;
-    offset++;
-
-    // TYPE_FRAME + ACTION - son uno mismo con 1 nibble son 16 posibilidades
-    // de cada uno,
-
-    uint8_t req_cred = (eNoType << 4) | eReqWifi;
-    buffer[offset++] = req_cred;
-
-    // memset(buffer + offset, 0, MAX_DATA); // ponemos la parte de data en 0.
-    buffer[offset++] = 0;
-  } break;
-  case OP_ACK: {
-
-    /*
-     * el ACK le va a indicar a la rasberry que este ESP32, ya recibio las
-     * credenicales pero aun no podemos saber si son las correctas, porque
-     * primero necesitamos descoenctarnos de la AP actual para inciar en el
-     * WIFI normal
-     *
-     * */
-
-    uint16_t id = htons(ACK);
-    memcpy(buffer + offset, &id, 2);
-    offset += 2;
-
-    buffer[offset++] = 2; // 2 bytes de transferencia
-    buffer[offset++] = (eRespACK << 4) | action_none; // 0003 0000
-    buffer[offset++] = 1; // solo para diferenicar del NACK
-
-  } break;
-  case OP_NACK: {
-
-    uint16_t id = htons(ACK);
-    memcpy(buffer + offset, &id, 2);
-    offset += 2;
-    buffer[offset] = 0xFF;
-    offset++;
-    buffer[offset++] = 0xFF; // accion y tipo en maximo indciando error.
-    buffer[offset++] = 0;
-  } break;
-
-  default: {
-    ESP_LOGI(TAG, "OPCION INCORRECTA: ");
-  } break;
-  }
-  int sent = send(tcp_client.sock, buffer, offset, 0);
-  if (sent < 0) {
-    char err_str[32];
-    ESP_LOGE(TAG, "\r\nsend() fallo errno: %d\r\n", errno);
-
-    return ESP_FAIL;
-  }
-  for (int i = 0; i < offset; i++) {
-    pos += snprintf(hex_buf + pos, sizeof(hex_buf) - pos, "%02X ", buffer[i]);
-  }
-
-  ESP_LOGI(TAG, "DEBUG - FRAME SEND: %s", hex_buf);
-  return ESP_OK;
 }

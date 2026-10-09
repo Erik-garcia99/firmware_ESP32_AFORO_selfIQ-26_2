@@ -49,19 +49,21 @@
 
 //+++++++++++++ grupos de eventos
 EventGroupHandle_t s_wifi_event_group;
+QueueHandle_t tcp_rx_queue;
+EventGroupHandle_t g_tcp_event_group;
 
 //++++++++++++++++++++++++++= estrucutras - enums
 
 // estucuturua para red
-TYPE_ESP_WIFI_T esp_wifi;
+TYPE_ESP_WIFI_T esp_wifi = {0};
 // estrucutra para parametros de la conexion tcp
 TYPE_TCP_CLIENT_T tcp_client = {0};
 // enum de operacion CP
 TYPE_OP_TYPE_T op_type;
 // enum de trama bianrio
 ACTION_T action;
-
 TYPE_FRAME_T type_frame;
+DATA_FIELD_T data_field_t;
 
 // estrucutra de la uncion que agrupa los datos
 TYPE_SEND_INFO_T send_info = {0};
@@ -70,13 +72,9 @@ TYPE_FORMAT_REQUEST_T format_request = {0};
 
 // ++++++++++++++++++++++++ variables globales ++++++++++++++++++++=
 
-char g_wifi_ssid[33] = {0};
-char g_wifi_pass[65] = {0};
-char g_wifi_user[32] = {0};
-
 uint8_t g_wifi_type = eWifiDefault;
 
-const char *TAG = "MAIN_AFORO: ";
+static const char *TAG = "MAIN_AFORO: ";
 
 // +++++++++++++++++++++++++++++ handle
 
@@ -89,6 +87,7 @@ TaskHandle_t xTcp_process_task;
 esp_err_t nvs_save_str(const char *key, const char *value);
 esp_err_t nvs_load_str(const char *key, char *buf, size_t len);
 esp_err_t save_wifi_credentials(void);
+esp_err_t load_wifi_credentials(void);
 /**
  * @note actualizacion de funcion, para aceptar redes de hogar y de epresa
  ***/
@@ -117,16 +116,23 @@ void tcp_process_task(void *params);
 // inicio del programa
 void app_main(void) {
 
+  // variables
+  bool creds_in_nvs = false;
+  esp_err_t ret;
+  tcp_rx_queue = NULL;
+  g_tcp_event_group = NULL;
+  s_wifi_event_group = NULL;
+
+  // grupos de eventos
   // creamos el grupo de eventos para WIFI
   s_wifi_event_group = xEventGroupCreate();
   g_tcp_event_group = xEventGroupCreate();
 
-  // grupo de evento para TCP
+  // colas
   tcp_rx_queue = xQueueCreate(10, sizeof(TYPE_FORMAT_REQUEST_T *));
-  esp_err_t ret;
 
   /**
-   * lo primero que tendriamos que hacer es inciar WIFI,
+   * iniciamos memoria NVS
    *
    * */
 
@@ -139,45 +145,9 @@ void app_main(void) {
   ESP_ERROR_CHECK(ret);
 
   // +++++++++++++++++++++ Buscar credenciales NVS +++++++++++++++++++++
-  memset(g_wifi_ssid, 0, sizeof(g_wifi_ssid));
-  memset(g_wifi_pass, 0, sizeof(g_wifi_pass));
-  memset(g_wifi_user, 0, sizeof(g_wifi_user));
 
-  char wifi_type_str[4] = {0};
-
-  // --- Carga/obtencion de credenciales WiFi
-  bool creds_in_nvs = false;
-
-  esp_err_t ret_ssid =
-      nvs_load_str("wifi_ssid", g_wifi_ssid, sizeof(g_wifi_ssid));
-
-  esp_err_t ret_pass =
-      nvs_load_str("wifi_pass", g_wifi_pass, sizeof(g_wifi_pass));
-
-  esp_err_t ret_type =
-      nvs_load_str("wifi_type", wifi_type_str, sizeof(wifi_type_str));
-
-  if (ret_ssid == ESP_OK && ret_pass == ESP_OK && ret_type == ESP_OK &&
-      g_wifi_ssid[0] != '\0') {
-
-    int type = atoi(wifi_type_str);
-
-    if (type == eWifiDefault) {
-      creds_in_nvs = true;
-    } else if (type == eWifiEnterprise) {
-
-      if (nvs_load_str("wifi_user", g_wifi_user, sizeof(g_wifi_user)) ==
-              ESP_OK &&
-          g_wifi_user[0] != '\0') {
-
-        creds_in_nvs = true;
-      }
-    }
-
-    if (creds_in_nvs) {
-      g_wifi_type = type;
-    }
-  }
+  ret = load_wifi_credentials();
+  creds_in_nvs = (ret == ESP_OK);
 
   if (!creds_in_nvs) {
     /*****************************************
@@ -198,7 +168,7 @@ void app_main(void) {
      *
      *
      ******************************************/
-
+    ESP_LOGW(TAG, "No se encontraron credenciales WiFi en NVS");
     // esta seccion sera esa parte, la coneeccion y obtencion de datos -> puede
     // que mandemos a llama a una funcion, ya veremos
 
@@ -208,91 +178,248 @@ void app_main(void) {
 
     // por ahora lo dejaremos asi hardcodeado, pero despues lo tendremos que
     // pasara  una macro, pero debe de estar encrptado.
-    update_setup_cred("SelfIQ-Admi", "$elfIQ-4dmi-1", NULL, "SETUP_WIFI");
 
-    // nos conectamos al WIFI
-    // xEventGroupSetBits(s_wifi_event_group, WIFI_CREDS_READY);
+    ret = update_setup_cred("SelfIQ-Admi", "$elfIQ-4dmi-1", NULL, "SETUP_WIFI");
+    ESP_ERROR_CHECK(ret);
     wifi_init_sta();
-
-    // xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+    ESP_LOGI(TAG, "estableciendo conexion con la red AP de la RPI");
 
     // ahora neceistamos conectarnos al server TCP que se tiene la RPI. (por
     // ahora podemos debuggear por el log, pero vamos a necesitar algo para
     // inidcar al usuario posibles errores)
 
-    update_setup_cred(RPI_IP_SETUP, RPI_PORT_SETUP, NULL, "SETUP_TCP_CLIENT");
+    ret = update_tcp_config(RPI_IP_SETUP, RPI_PORT_SETUP);
+
+    ESP_ERROR_CHECK(ret);
+
+    /*
+     * Esta función debe esperar hasta que tcp_process_task()
+     * haya recibido y validado las credenciales.
+     *
+     * tcp_process_task() utiliza update_setup_cred(),
+     * que actualiza directamente:
+     *
+     * esp_wifi.ssid
+     * esp_wifi.pswd
+     * esp_wifi.user_name
+     * esp_wifi.type_connected
+     */
+
+    // @ NOTE - aun me falta realizar validaciones para mandar para aca atras
+    // cunado ya se hayan recibido las credenciales.
     setup_tcp();
 
-    // regreso con las credenicales ya actualizadas entonces ahora necesito
-    // conectarme
-    wifi_init_sta();
-    // Restaurar el bit que fue borrado en wifi_init_sta()
-    xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+    // +++++++++++++ Validar credenciales recibidas +++++++++++++
 
-    // si ya se conecto entonces no vamos a ocupar las tareas de tcp
-    vTaskDelete(xRecv_task);
-    vTaskDelete(xTcp_process_task);
+    if (esp_wifi.ssid == NULL || esp_wifi.pswd == NULL ||
+        esp_wifi.ssid[0] == '\0') {
+
+      ESP_LOGE(TAG, "Credenciales WiFi incompletas");
+      return;
+    }
+
+    if (esp_wifi.type_connected == 1 &&
+        (esp_wifi.user_name == NULL || esp_wifi.user_name[0] == '\0' ||
+         esp_wifi.pswd[0] == '\0')) {
+
+      ESP_LOGE(TAG, "Credenciales Enterprise incompletas");
+      return;
+    }
+
+    // +++++++++++++ Finalizar comunicación TCP +++++++++++++
+
+    /*
+     * Ya recibimos las credenciales.
+     * Cerramos las tareas temporales del socket.
+     */
+
+    if (xRecv_task != NULL) {
+      vTaskDelete(xRecv_task);
+      xRecv_task = NULL;
+    }
+
+    if (xTcp_process_task != NULL) {
+      vTaskDelete(xTcp_process_task);
+      xTcp_process_task = NULL;
+    }
+
+    if (tcp_client.sock >= 0) {
+      close(tcp_client.sock);
+      tcp_client.sock = -1;
+    }
+
+    tcp_client.connected = 0;
+
+    // +++++++++++++ Conectarse a la red definitiva +++++++++++++
+
+    ESP_LOGI(TAG, "Cambiando a la red WiFi definitiva");
+
+    /*
+     * Las credenciales ya están almacenadas en esp_wifi.
+     * No necesitamos llamar nuevamente a update_setup_cred().
+     */
+
+    wifi_reconnect();
+
+    if (!esp_wifi.connected) {
+      ESP_LOGE(TAG, "No se pudo conectar a la red definitiva");
+      return;
+    }
+    // +++++++++++++ Guardar credenciales en NVS +++++++++++++
+
+    ret = save_wifi_credentials();
+
+    if (ret != ESP_OK) {
+      ESP_LOGE(TAG, "Error al guardar credenciales: %s", esp_err_to_name(ret));
+      return;
+    }
+
+    ESP_LOGI(TAG, "Credenciales almacenadas correctamente en NVS");
 
   } else {
+    // +++++++++++++++++++++ Credenciales existentes +++++++++++++++++++++
+
     ESP_LOGI(TAG, "Credenciales encontradas en FLASH");
 
-    if (g_wifi_type == eWifiEnterprise) {
+    /*
+     * load_wifi_credentials() ya cargó las credenciales
+     * directamente en la estructura esp_wifi.
+     */
+
+    if (esp_wifi.type_connected == 1) {
 
       ESP_LOGI(TAG, "Cargando WiFi empresarial");
-
-      ret = update_setup_cred(g_wifi_ssid, g_wifi_pass, g_wifi_user,
-                              "SETUP_ENTERPRISE_WIFI");
 
     } else {
 
       ESP_LOGI(TAG, "Cargando WiFi normal");
-
-      ret = update_setup_cred(g_wifi_ssid, g_wifi_pass, NULL, "SETUP_WIFI");
     }
 
-    ESP_ERROR_CHECK(ret);
-
-    // Conectarse usando las credenciales cargadas
+    // Conectarse usando las credenciales almacenadas
     wifi_init_sta();
   }
 
-  ESP_LOGI(TAG, "ESP CONECTADA A LA RED CON EXITO");
+  // +++++++++++++++++++++ Finalización +++++++++++++++++++++
+
+  if (esp_wifi.connected) {
+
+    ESP_LOGI(TAG, "ESP CONECTADA A LA RED CON EXITO");
+
+  } else {
+
+    ESP_LOGE(TAG, "No se pudo establecer la conexion WiFi");
+  }
 }
+
 esp_err_t save_wifi_credentials(void) {
 
+  // Validar las credenciales actuales
+  if (esp_wifi.ssid == NULL || esp_wifi.pswd == NULL ||
+      esp_wifi.ssid[0] == '\0') {
+    return ESP_ERR_INVALID_ARG;
+  }
+
+  bool enterprise = (esp_wifi.type_connected == 1);
+
+  if (enterprise &&
+      (esp_wifi.user_name == NULL || esp_wifi.user_name[0] == '\0' ||
+       esp_wifi.pswd[0] == '\0')) {
+    return ESP_ERR_INVALID_ARG;
+  }
+
+  nvs_handle_t handle;
+
+  esp_err_t ret = nvs_open("storage", NVS_READWRITE, &handle);
+
+  if (ret != ESP_OK)
+    return ret;
+
+  // Guardar SSID
+  ret = nvs_set_str(handle, "wifi_ssid", esp_wifi.ssid);
+  if (ret != ESP_OK)
+    goto cleanup;
+
+  // Guardar contraseña
+  ret = nvs_set_str(handle, "wifi_pass", esp_wifi.pswd);
+  if (ret != ESP_OK)
+    goto cleanup;
+
+  // Guardar usuario si es Enterprise
+  if (enterprise) {
+
+    ret = nvs_set_str(handle, "wifi_user", esp_wifi.user_name);
+
+  } else {
+
+    // Si antes era Enterprise, borrar el usuario anterior
+    ret = nvs_erase_key(handle, "wifi_user");
+
+    if (ret == ESP_ERR_NVS_NOT_FOUND)
+      ret = ESP_OK;
+  }
+
+  if (ret != ESP_OK)
+    goto cleanup;
+
+  // Mantener el formato anterior de wifi_type: 1 o 2
   char type_str[4];
 
-  snprintf(type_str, sizeof(type_str), "%u", g_wifi_type);
+  snprintf(type_str, sizeof(type_str), "%u",
+           enterprise ? eWifiEnterprise : eWifiDefault);
+
+  ret = nvs_set_str(handle, "wifi_type", type_str);
+
+  if (ret == ESP_OK)
+    ret = nvs_commit(handle);
+
+cleanup:
+  nvs_close(handle);
+  return ret;
+}
+
+esp_err_t load_wifi_credentials(void) {
+
+  char ssid[33] = {0};
+  char pass[65] = {0};
+  char user[32] = {0};
+  char type_str[4] = {0};
 
   esp_err_t ret;
 
-  ret = nvs_save_str("wifi_ssid", g_wifi_ssid);
+  ret = nvs_load_str("wifi_ssid", ssid, sizeof(ssid));
   if (ret != ESP_OK)
     return ret;
 
-  ret = nvs_save_str("wifi_pass", g_wifi_pass);
+  ret = nvs_load_str("wifi_pass", pass, sizeof(pass));
   if (ret != ESP_OK)
     return ret;
 
-  if (g_wifi_type == eWifiEnterprise) {
-    ret = nvs_save_str("wifi_user", g_wifi_user);
+  ret = nvs_load_str("wifi_type", type_str, sizeof(type_str));
+  if (ret != ESP_OK)
+    return ret;
+
+  // Evita aceptar valores desconocidos como WiFi normal
+  if (ssid[0] == '\0')
+    return ESP_ERR_INVALID_ARG;
+
+  if (strcmp(type_str, "1") == 0) {
+
+    return update_setup_cred(ssid, pass, NULL, "SETUP_WIFI");
+
+  } else if (strcmp(type_str, "2") == 0) {
+
+    ret = nvs_load_str("wifi_user", user, sizeof(user));
+
     if (ret != ESP_OK)
       return ret;
+
+    if (user[0] == '\0' || pass[0] == '\0')
+      return ESP_ERR_INVALID_ARG;
+
+    return update_setup_cred(ssid, pass, user, "SETUP_ENTERPRISE_WIFI");
   }
 
-  return nvs_save_str("wifi_type", type_str);
-}
-
-esp_err_t nvs_save_str(const char *key, const char *value) {
-  nvs_handle_t handle;
-  esp_err_t err = nvs_open("storage", NVS_READWRITE, &handle);
-  if (err != ESP_OK)
-    return err;
-  err = nvs_set_str(handle, key, value);
-  if (err == ESP_OK)
-    nvs_commit(handle);
-  nvs_close(handle);
-  return err;
+  return ESP_ERR_INVALID_ARG;
 }
 
 esp_err_t nvs_load_str(const char *key, char *buf, size_t len) {
@@ -308,39 +435,42 @@ esp_err_t nvs_load_str(const char *key, char *buf, size_t len) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // update_setup_cred
+// en caso de WIDI key = ssid y anchor = psw
+// para WIFI empresa igual solo que user, es el usuario en la rede de la empresa
+//
+// -----TCP
+// para socket TCP, ket = IP_SERVER , anchor = PORT_IP
 // ─────────────────────────────────────────────────────────────────────────────
-esp_err_t update_setup_cred(char *ssid, char *pswd, char *user, char *type) {
+esp_err_t update_setup_cred(char *key, char *anchor, char *user, char *type) {
 
   if (strcmp(type, "SETUP_WIFI") == 0) {
-    esp_wifi.ssid = realloc(esp_wifi.ssid, strlen(ssid) + 1);
-    esp_wifi.pswd = realloc(esp_wifi.pswd, strlen(pswd) + 1);
+    esp_wifi.ssid = realloc(esp_wifi.ssid, strlen(key) + 1);
+    esp_wifi.pswd = realloc(esp_wifi.pswd, strlen(anchor) + 1);
     if (esp_wifi.ssid != NULL && esp_wifi.pswd != NULL) {
-      strcpy(esp_wifi.ssid, ssid);
-      strcpy(esp_wifi.pswd, pswd);
+      strcpy(esp_wifi.ssid, key);
+      strcpy(esp_wifi.pswd, anchor);
       free(esp_wifi.user_name);
       esp_wifi.user_name = NULL;
       esp_wifi.type_connected = 0;
       return ESP_OK;
     }
-    ESP_LOGE(TAG, "");
+    ESP_LOGE(TAG, "no se pudo asignar memoria");
     return ESP_FAIL;
-  } else if (strcmp(type, "SETUP_TCP_CLIENT") == 0) {
-
   }
 
-  else if (strcmp(type, "ENT") == 0) {
-    esp_wifi.ssid = realloc(esp_wifi.ssid, strlen(ssid) + 1);
-    esp_wifi.pswd = realloc(esp_wifi.pswd, strlen(pswd) + 1);
+  else if (strcmp(type, "SETUP_ENTERPRISE_WIFI") == 0) {
+    esp_wifi.ssid = realloc(esp_wifi.ssid, strlen(key) + 1);
+    esp_wifi.pswd = realloc(esp_wifi.pswd, strlen(anchor) + 1);
     esp_wifi.user_name = realloc(esp_wifi.user_name, strlen(user) + 1);
     if (esp_wifi.ssid != NULL && esp_wifi.pswd != NULL &&
         esp_wifi.user_name != NULL) {
-      strcpy(esp_wifi.ssid, ssid);
-      strcpy(esp_wifi.pswd, pswd);
+      strcpy(esp_wifi.ssid, key);
+      strcpy(esp_wifi.pswd, anchor);
       strcpy(esp_wifi.user_name, user);
       esp_wifi.type_connected = 1;
       return ESP_OK;
     }
-    uart_write_bytes(UART_NUM_0, "ERR:NO_MEM\n", 11);
+
     return ESP_FAIL;
   }
 
@@ -354,8 +484,8 @@ void tcp_process_task(void *params) {
   // uint8_t buffer[MAX_DATA]; // para mostrar mensajes por UART
   esp_err_t ret;
 
-  uint8_t frame_len;
-  // int len;
+  // uint8_t frame_len;
+  //  int len;
   int offset = 0;
   while (1) {
 
@@ -368,24 +498,23 @@ void tcp_process_task(void *params) {
         ESP_LOGI(TAG, "ACK recibido");
 
         uint8_t data_len = frame->len - 1;
+        uint8_t *ssid_aux = NULL;
+        uint8_t *pswd_aux = NULL;
+        uint8_t *user_aux = NULL;
+
+        /*uint8_t ssid_len = 0;
+        uint8_t pswd_len = 0;
+        uint8_t user_len = 0;*/
+
+        uint8_t enterprise_frame =
+            0; // 0 indica que no de empresa, si se activa en 1, indica que si
+               // es de empresa la red
 
         // entonces cuando viene con ACK de parte de la RPI, trae las
         // credenciales pero aun no estan fromateadas
 
         // indicando que sera una red normal.
         if (frame->action == eRespWifi) {
-          uint8_t *ssid_aux = NULL;
-          uint8_t *pswd_aux = NULL;
-          uint8_t *user_aux = NULL;
-
-          uint8_t ssid_len = 0;
-          uint8_t pswd_len = 0;
-          uint8_t user_len = 0;
-
-          uint8_t enterprise_frame =
-              0; // 0 indica que no de empresa, si se activa en 1, indica que si
-                 // es de empresa la red
-
           // wifi de casa, o privada que solo requiere el SSID y PSWD
 
           // creamos una copia de data en buffer para manerajr de mejor manera
@@ -404,11 +533,18 @@ void tcp_process_task(void *params) {
                 frame->data[offset++]; // tamnio de la infromacion (tamanio en
                                        // bytes de SSID)
 
-            if (field_id != eDataSSID && field_id != eDataPSWD) {
+            if (field_id != eDataSSID && field_id != eDataPSWD &&
+                field_id != eDataUSR) {
               // entonces el frame tiene un error por lo que salidmos e
               // indicamos squi el error
               //@ERROR frame con inicio incorrecto, desechamaos todo el frame
               ESP_LOGE(TAG, "\r\nFrame con ID incorrecto\r\n");
+              break;
+            }
+
+            if (field_id == eDataUSR && frame->type_frame != eWifiEnterprise) {
+
+              ESP_LOGE(TAG, "Campo USER recibido en red no Enterprise");
               break;
             }
 
@@ -439,10 +575,17 @@ void tcp_process_task(void *params) {
                 break;
               }
 
-              // esta correcto el SSID
+              // asignamos memoria a SSID
+              ssid_aux = malloc(field_len + 1);
+
+              if (ssid_aux == NULL) {
+                ESP_LOGE(TAG, "no se pudo asingar memoeria para SSID");
+                break;
+              }
+
               memcpy(ssid_aux, &frame->data[offset], field_len);
               ssid_aux[field_len] = '\0';
-              ssid_len = field_len;
+              // ssid_len = field_len;
             } else if (field_id == eDataPSWD) {
               if (pswd_aux != NULL) {
                 ESP_LOGE(TAG, "PSWD duplicado");
@@ -455,34 +598,40 @@ void tcp_process_task(void *params) {
               }
 
               // el PSWD esta muy bien
+              pswd_aux = malloc(field_len + 1);
+              if (pswd_aux == NULL) {
+                ESP_LOGE(TAG, "no se pudo asingar memoeria para password");
+                break;
+              }
 
               memcpy(pswd_aux, &frame->data[offset], field_len);
               pswd_aux[field_len] = '\0';
-              pswd_len = field_len;
-            } else if (frame->type_frame == eWifiEnterprise) {
-              //
-              // pero perimo debermos de verificar que antes haya ya estado
-              // sando el ssid como el pswd
-              if (ssid_aux != NULL && pswd_aux != NULL) {
-                // entonces ya tenemos el resto
-                if (user_aux != NULL) {
-                  ESP_LOGE(TAG, "USER duplicasdo");
-                  break;
-                }
+              // pswd_len = field_len;
+            } else if (field_id == eDataUSR &&
+                       frame->type_frame == eWifiEnterprise) {
 
-                if (field_len > USER_LEN_MAX) {
-                  ESP_LOGE(TAG, "USER demasiado largo: %u", field_len);
-                  break;
-                }
-
-                // todo esta correcto
-                memcpy(user_aux, &frame->data[offset], field_len);
-                user_aux[field_len] = '\0';
-                user_len = field_len;
-                enterprise_frame = 1;
+              if (user_aux != NULL) {
+                ESP_LOGE(TAG, "USER duplicado");
+                break;
               }
-              continue; // en otro caso si no estan incializados segudimos
-                        // ahasta que estos 2 campos esten inicializaods
+
+              if (field_len == 0 || field_len > USER_LEN_MAX) {
+                ESP_LOGE(TAG, "Longitud USER invalida: %u", field_len);
+                break;
+              }
+
+              user_aux = malloc(field_len + 1);
+
+              if (user_aux == NULL) {
+                ESP_LOGE(TAG, "No se pudo asignar memoria para USER");
+                break;
+              }
+
+              memcpy(user_aux, &frame->data[offset], field_len);
+              user_aux[field_len] = '\0';
+
+              // user_len = field_len;
+              enterprise_frame = 1;
             }
 
             offset += field_len; // avanzamos al sigueinte campo
@@ -493,189 +642,37 @@ void tcp_process_task(void *params) {
                                     (char *)user_aux, "SETUP_ENTERPRISE_WIFI");
           } else {
             ret = update_setup_cred((char *)ssid_aux, (char *)pswd_aux, NULL,
-                                    " SETUP_WIFI");
+                                    "SETUP_WIFI");
           }
         }
-
+        free(ssid_aux);
+        free(pswd_aux);
+        free(user_aux);
         xEventGroupSetBits(s_wifi_event_group, WIFI_CREDS_READY);
 
         // entonces en este momento ya se tienen las credenicales actualizadas.
-        vPortFree(frame);
-
-        // entonces ahora envio a aque se actualice
-
-        continue;
       }
     }
 
     // NACK: identificador 0x3501 y len == 0xFF
-    else if (frame->id == ACK && frame->len == 0xFF) {
+    else if (frame->header == ACK && frame->len == 0xFF) {
+      ESP_LOGE(TAG, "\r\nEl servidor no contesta\r\n");
 
-      if (login_pending) {
-        xEventGroupSetBits(g_login_event_group, LOGIN_FAIL);
-        login_pending = 0;
-      }
-
-      len = snprintf(buffer, sizeof(buffer), "\r\nservidor contesta: NACK\r\n");
-      uart_write_bytes(global_uart.NUM_PORT, UART_RED, strlen(UART_RED));
-      uart_write_bytes(global_uart.NUM_PORT, buffer, len);
-      uart_write_bytes(global_uart.NUM_PORT, UART_RESET, strlen(UART_RESET));
-      vPortFree(frame);
-      continue;
     }
-
-    // en otro caso recibimos un comando del servidor (trama CAFE)
-    else if (frame->id == HEADER) {
-      frame_len = 0;
-
-      // si llego ahora debemos de ver uqe onda
-
-      // verificamos que sea para nosotros
-      if (frame->user != user) {
-        len = snprintf(buffer, sizeof(buffer),
-                       "\r\npeticion no para este usuario\r\n");
-        uart_write_bytes(global_uart.NUM_PORT, UART_RED, strlen(UART_RED));
-        uart_write_bytes(global_uart.NUM_PORT, buffer, len);
-        uart_write_bytes(global_uart.NUM_PORT, UART_RESET, strlen(UART_RESET));
-        free(frame);
-        continue;
-      }
-
-      // ahora necesitamos ver que servicio es lo necesario
-      if (frame->action == read_esp) {
-        switch (frame->resourse) {
-        case led: {
-          // el estado esta 1 o 0, que solo abarca 1 byte
-          memcpy(send_info.format_request.value, &led_state, 1);
-          send_info.format_request.len = 1; // solo usamos 1 byte para el led
-          send_info.op_type = OP_ACK;       // operacion ACK
-          ret = send_message();
-          if (ret != ESP_OK) {
-            len = snprintf(buffer, sizeof(buffer),
-                           "\r\nERRO AL SER EL ENVIO DEL FRAME\r\n");
-            uart_write_bytes(global_uart.NUM_PORT, UART_RED, strlen(UART_RED));
-            uart_write_bytes(global_uart.NUM_PORT, buffer, len);
-            uart_write_bytes(global_uart.NUM_PORT, UART_RESET,
-                             strlen(UART_RESET));
-          }
-
-        } break;
-
-        case adc: {
-          // adc puede ser un valor de 16 bits
-          uint16_t adc_state = read_adc(ADC_CHANNEL);
-          uint16_t adc_net = htons(adc_state);
-          memcpy(send_info.format_request.value, &adc_net,
-                 2); // en este caso usamos 2 bytes
-          send_info.format_request.len = 2;
-          send_info.op_type = OP_ACK;
-          ret = send_message();
-
-          if (ret != ESP_OK) {
-            len = snprintf(buffer, sizeof(buffer),
-                           "\r\nERRO AL SER EL ENVIO DEL FRAME\r\n");
-            uart_write_bytes(global_uart.NUM_PORT, UART_RED, strlen(UART_RED));
-            uart_write_bytes(global_uart.NUM_PORT, buffer, len);
-            uart_write_bytes(global_uart.NUM_PORT, UART_RESET,
-                             strlen(UART_RESET));
-          }
-        } break;
-
-        case pwm: {
-          uint16_t duty = pwm_get_duty();
-          uint8_t pct = (uint8_t)(((uint32_t)duty * 100U) / PWM_MAX);
-          send_info.format_request.value[0] = pct;
-          send_info.format_request.len = 1;
-          send_info.op_type = OP_ACK;
-          ret = send_message();
-
-          if (ret != ESP_OK) {
-            len = snprintf(buffer, sizeof(buffer),
-                           "\r\nERRO AL SER EL ENVIO DEL FRAME\r\n");
-            uart_write_bytes(global_uart.NUM_PORT, UART_RED, strlen(UART_RED));
-            uart_write_bytes(global_uart.NUM_PORT, buffer, len);
-            uart_write_bytes(global_uart.NUM_PORT, UART_RESET,
-                             strlen(UART_RESET));
-          }
-        } break;
-
-        default: {
-          send_info.op_type = OP_NACK;
-          ret = send_message();
-        } break;
-        }
-      } else if (frame->action == write_esp) {
-        switch (frame->resourse) {
-
-        case led: {
-          // quiere escribir
-          led_state = frame->value[0];
-          gpio_set_level(OUTPUT_PIN, led_state);
-
-          memcpy(send_info.format_request.value, &led_state, 1);
-          send_info.format_request.len = 1;
-          send_info.format_request.value[0] = led_state;
-          send_info.op_type = OP_ACK;
-          // conestamos a la peticion
-          ret = send_message();
-        } break;
-
-        case pwm: {
-          uint8_t pct = frame->value[0];
-          if (pct > 100)
-            pct = 100;
-          uint16_t duty = (uint16_t)(((uint32_t)pct * PWM_MAX) / 100U);
-          pwm_set_duty(duty);
-          duty = pwm_get_duty();
-          pct = (uint8_t)(((uint32_t)duty * 100U) / PWM_MAX);
-          send_info.format_request.value[0] = pct;
-          send_info.format_request.len = 1;
-          send_info.op_type = OP_ACK;
-          ret = send_message();
-        } break;
-        case adc: {
-          len = snprintf(buffer, sizeof(buffer),
-                         "\r\noperacion con ADC incorrecta\r\n");
-          uart_write_bytes(global_uart.NUM_PORT, UART_RED, strlen(UART_RED));
-          uart_write_bytes(global_uart.NUM_PORT, buffer, len);
-          uart_write_bytes(global_uart.NUM_PORT, UART_RESET,
-                           strlen(UART_RESET));
-
-          // enviamos un NACK
-          send_info.op_type = OP_NACK;
-          ret = send_message();
-        } break;
-
-        default: {
-          send_info.op_type = OP_NACK;
-          ret = send_message();
-        } break;
-        }
-      }
-
-      vPortFree(frame);
-    }
-
+    // el frame que se envio no concuerda con las estrucutras aceptadas que el
+    // programa puede procesar
     else {
-      len = snprintf(buffer, sizeof(buffer), "\r\nFORMTAMO INCORRECTO\r\n");
-      uart_write_bytes(global_uart.NUM_PORT, UART_RED, strlen(UART_RED));
-      uart_write_bytes(global_uart.NUM_PORT, buffer, len);
-      uart_write_bytes(global_uart.NUM_PORT, UART_RESET, strlen(UART_RESET));
+      ESP_LOGE(TAG, "\r\nFORMTAMO INCORRECTO\r\n");
 
       // debemos de enviar un NACK
-
       send_info.op_type = OP_NACK;
       ret = send_message();
       if (ret != ESP_OK) {
-        len = snprintf(buffer, sizeof(buffer),
-                       "\r\nERRO AL SER EL ENVIO DEL FRAME\r\n");
-        uart_write_bytes(global_uart.NUM_PORT, UART_RED, strlen(UART_RED));
-        uart_write_bytes(global_uart.NUM_PORT, buffer, len);
-        uart_write_bytes(global_uart.NUM_PORT, UART_RESET, strlen(UART_RESET));
+        ESP_LOGE(TAG, "\r\nERRO AL SER EL ENVIO DEL FRAME\r\n");
       }
-      free(frame);
-      continue;
     }
+    vPortFree(frame);
+    frame = NULL;
   }
 }
 
@@ -684,24 +681,24 @@ void setup_tcp(void) {
   // no es tarea, pero realizara procesos que pueden tardar o llevar mas o menos
   // necetiamos una froma de saber que ya solciitamos, las credenicales WIFI.
 
-  static req_wifi = 0;
-  esp_err_t ret;
+  static uint8_t req_wifi = 0;
+  // esp_err_t ret;
   while (1) {
 
     esp_err_t ret = tcp_cliente_init();
-    int len;
 
     if (ret == ESP_OK) {
       ESP_LOGI(TAG, "\r\nconexion con el servidor establecida\r\n");
       xTaskCreate(recv_task, "recv_task", 4098, NULL, 8, &xRecv_task);
       xTaskCreate(tcp_process_task, "tcp_process_task", 4098, NULL, 8,
-                  xTcp_process_task);
+                  &xTcp_process_task);
 
       if (req_wifi == 0) {
         // quiere decir que aprnas creamos la tarea talvez o que no hemos
         // solicitado las credenicales para coenctarnos a WIFI.
         send_info.op_type = OPReqCredWifi;
         ret = send_message();
+        ESP_ERROR_CHECK(ret);
         req_wifi = 1;
       }
 

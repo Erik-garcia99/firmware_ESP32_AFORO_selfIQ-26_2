@@ -70,6 +70,8 @@ typedef enum {
   eDataUSR = 0x75,  // solo en el caso de empresa se usara este.
 } DATA_FIELD_T;
 
+extern DATA_FIELD_T data_field_t;
+
 /*************************************************************
  * @brief establece la estrucutra del frame entre peticiones y respuesta de ESP
  * con rasbery pi. para peticiones de credenicales de WIFI y otros proceso que

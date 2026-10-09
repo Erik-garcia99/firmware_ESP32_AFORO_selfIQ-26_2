@@ -1,5 +1,12 @@
 
-
+/* *********************************************
+ *              selfIQ 2026-2
+ *
+ * @autor erik garcia chavez
+ * @date octuber 2026
+ * @assginature : proyecto de carrera
+ * @teacher : Jose Isabel Garcia Rocha
+ * ************************************************* */
 #ifndef WIFI_LIB_H
 #define WIFI_LIB_H
 
@@ -59,8 +66,5 @@ void wifi_init_sta(void);
  * esp_wifi. llamar despues de actualizar esp_wifi.ssid / pswd.
  */
 void wifi_reconnect(void);
-
-void wifi_init_ap(void);
-void wifi_stop_ap(void);
 
 #endif

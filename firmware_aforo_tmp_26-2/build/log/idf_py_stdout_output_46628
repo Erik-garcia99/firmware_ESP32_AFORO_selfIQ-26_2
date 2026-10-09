@@ -1,0 +1,93 @@
+Command: /home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python /opt/esp-idf/tools/idf_monitor.py -p /dev/ttyUSB0 -b 115200 --toolchain-prefix xtensa-esp32-elf- --target esp32 --revision 0 /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/firmware_aforo_tmp_26-2.elf /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/bootloader/bootloader.elf -m '/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python' '/opt/esp-idf/tools/idf.py' '-p' '/dev/ttyUSB0'
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0040,len:6272
+load:0x40078000,len:15820
+load:0x40080400,len:3920
+entry 0x40080644
+[0;32mI (27) boot: ESP-IDF v6.0.2 2nd stage bootloader[0m
+[0;32mI (27) boot: compile time Oct  1 2026 22:07:03[0m
+[0;32mI (28) boot: Multicore bootloader[0m
+[0;32mI (29) boot: chip revision: v3.1[0m
+[0;32mI (32) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (35) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (39) boot.esp32: SPI Flash Size : 2MB[0m
+[0;32mI (42) boot: Enabling RNG early entropy source...[0m
+[0;32mI (47) boot: Partition Table:[0m
+[0;32mI (49) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (56) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (62) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (69) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (75) boot: End of partition table[0m
+[0;32mI (79) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=1cde0h (118240) map[0m
+[0;32mI (128) esp_image: segment 1: paddr=0002ce08 vaddr=3ffb0000 size=03210h ( 12816) load[0m
+[0;32mI (134) esp_image: segment 2: paddr=00030020 vaddr=400d0020 size=9c53ch (640316) map[0m
+[0;32mI (362) esp_image: segment 3: paddr=000cc564 vaddr=3ffb3210 size=01318h (  4888) load[0m
+[0;32mI (364) esp_image: segment 4: paddr=000cd884 vaddr=40080000 size=15608h ( 87560) load[0m
+[0;32mI (402) esp_image: segment 5: paddr=000e2e94 vaddr=50000000 size=00028h (    40) load[0m
+[0;32mI (413) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (413) boot: Disabling RNG early entropy source...[0m
+[0;32mI (423) cpu_start: Multicore app[0m
+[0;32mI (432) cpu_start: GPIO 3 and 1 are used as console UART I/O pins[0m
+[0;32mI (432) cpu_start: Pro cpu start user code[0m
+[0;32mI (432) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (434) app_init: Application information:[0m
+[0;32mI (438) app_init: Project name:     firmware_aforo_tmp_26-2[0m
+[0;32mI (443) app_init: App version:      c525874-dirty[0m
+[0;32mI (447) app_init: Compile time:     Oct  8 2026 20:43:17[0m
+[0;32mI (452) app_init: ELF file SHA256:  104d81c37...[0m
+[0;32mI (457) app_init: ESP-IDF:          v6.0.2[0m
+[0;32mI (461) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (464) efuse_init: Max chip rev:     v3.99 [0m
+[0;32mI (468) efuse_init: Chip rev:         v3.1[0m
+[0;32mI (472) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (479) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (484) heap_init: At 3FFB8BB8 len 00027448 (157 KiB): DRAM[0m
+[0;32mI (489) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (494) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (500) heap_init: At 40095608 len 0000A9F8 (42 KiB): IRAM[0m
+[0;32mI (507) spi_flash: detected chip: generic[0m
+[0;32mI (509) spi_flash: flash io: dio[0m
+[0;33mW (512) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.[0m
+[0;32mI (526) main_task: Started on CPU0[0m
+[0;32mI (526) main_task: Calling app_main()[0m
+[0;33mW (556) MAIN_AFORO: : No se encontraron credenciales WiFi en NVS[0m
+[0;32mI (566) wifi:wifi driver task: 3ffc0708, prio:23, stack:6656, core=0[0m
+[0;32mI (576) wifi:wifi firmware version: 00ad238[0m
+[0;32mI (576) wifi:wifi certification version: v7.0[0m
+[0;32mI (576) wifi:config NVS flash: enabled[0m
+[0;32mI (576) wifi:config nano formatting: disabled[0m
+[0;32mI (586) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (586) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (596) wifi:Init management short buffer num: 32[0m
+[0;32mI (596) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (596) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (606) wifi:Init static rx buffer num: 10[0m
+[0;32mI (606) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (616) wifi_init: rx ba win: 6[0m
+[0;32mI (616) wifi_init: accept mbox: 6[0m
+[0;32mI (616) wifi_init: tcpip mbox: 32[0m
+[0;32mI (616) wifi_init: udp mbox: 6[0m
+[0;32mI (626) wifi_init: tcp mbox: 6[0m
+[0;32mI (626) wifi_init: tcp tx win: 5760[0m
+[0;32mI (626) wifi_init: tcp rx win: 5760[0m
+[0;32mI (636) wifi_init: tcp mss: 1440[0m
+[0;32mI (636) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (636) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (646) phy_init: phy_version 4863,a3a4459,Oct 28 2025,14:30:06[0m
+[0;32mI (726) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (726) wifi:enable tsf[0m
+[0;32mI (726) wifi_lib: Configurando red Personal[0m
+[0;32mI (766) wifi_lib: Esperando conexion WFi e IP...[0m
+[0;33mW (3176) wifi_lib: Reintentando conexion WiFi (1/5)[0m
+[0;33mW (5596) wifi_lib: Reintentando conexion WiFi (2/5)[0m
+[0;33mW (8016) wifi_lib: Reintentando conexion WiFi (3/5)[0m
+[0;33mW (10436) wifi_lib: Reintentando conexion WiFi (4/5)[0m
+[0;33mW (12856) wifi_lib: Reintentando conexion WiFi (5/5)[0m
+[1;31mE (15266) wifi_lib: Se agotaron los reintentos WiFi[0m
+[1;31mE (15266) wifi_lib: No se pudo conectar a WiFi[0m
+[0;32mI (15266) MAIN_AFORO: : estableciendo conexion con la red AP de la RPI[0m
