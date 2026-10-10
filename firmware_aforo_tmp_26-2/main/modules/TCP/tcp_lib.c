@@ -1,372 +1,218 @@
-/* *********************************************
- *              selfIQ 2026-2
- *
- * @autor erik garcia chavez
- * @date octuber 2026
- * @assginature : proyecto de carrera
- * @teacher : Jose Isabel Garcia Rocha
- * ************************************************* */
-
-#include "lwip/netdb.h"
-#include "lwip/sockets.h"
-#include <errno.h>
-#include <string.h>
-
-#include <freertos/FreeRTOS.h>
-#include <freertos/event_groups.h>
-
-#include "esp_log.h"
-
-#include <esp_err.h>
-#include <tcp_lib.h>
-
-#include "global.h"
 #include "tcp_lib.h"
+#include "global.h"
+#include "modules/WIFI/wifi_lib.h"
+#include "esp_log.h"
+#include "esp_timer.h"
+#include "freertos/task.h"
+#include "lwip/sockets.h"
+#include "lwip/inet.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-static const char *TAG = "TCP_CLIENT: ";
+static const char *TAG = "SELFIQ_TCP";
 
-esp_err_t tcp_cliente_init() {
-
-  // reinicamos todo antes de inciar
-  tcp_client.connected = 0;
-  if (tcp_client.sock >= 0) {
-    close(tcp_client.sock);
-    tcp_client.sock = -1;
-  }
-
-  // se realizan 5 intenteos antes de estabelcer fallo al intentear realizar la
-  // conexion
-  for (int n_retry = 0; n_retry < 5; n_retry++) {
-
-    ESP_LOGI(TAG, "intento %d de establecer conexion", n_retry);
-
-    // creamos el descriptor del socket
-    tcp_client.sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (tcp_client.sock < 0) {
-      ESP_LOGE(TAG, "error al crear el descriptor del socket(): %d", errno);
-      vTaskDelay(pdMS_TO_TICKS(1000));
-      continue; // saltamos todo y se vuelve a intentar.
+static const char *socket_hint(int e) {
+    switch (e) {
+    case ETIMEDOUT: return "Sin respuesta a tiempo: revise servidor/AP/firewall";
+    case ECONNREFUSED: return "IP accesible pero puerto rechazado: revise selfiq:5000";
+    case ENETUNREACH: return "Sin ruta: revise Wi-Fi e IP de la ESP";
+    case EHOSTUNREACH: return "Host no accesible: revise IP y AP";
+    case ECONNRESET: return "Servidor reinicio o cerro la conexion";
+    default: return "Revise servidor, interfaz AP y conectividad";
     }
-    // timeout de recv
-    struct timeval timeout = {.tv_sec = 5, .tv_usec = 0};
-    setsockopt(tcp_client.sock, SOL_SOCKET, SO_RCVTIMEO, &timeout,
-               sizeof(timeout));
-
-    // direccion del servidor
-    struct sockaddr_in server_addr = {
-        .sin_family = AF_INET,
-        .sin_port = htons(tcp_client.host_port),
-    };
-
-    inet_pton(AF_INET, tcp_client.host_ip, &server_addr.sin_addr);
-
-    // conectar
-    if (connect(tcp_client.sock, (struct sockaddr *)&server_addr,
-                sizeof(server_addr)) < 0) {
-      ESP_LOGE(TAG, "descriptor <connect()> fallo  %d", errno);
-      close(tcp_client.sock);
-      tcp_client.sock = -1;
-      vTaskDelay(pdMS_TO_TICKS(2000));
-      continue;
-    }
-
-    // exito, salir de inmediato
-    tcp_client.connected = 1;
-    ESP_LOGI(TAG, "\r\nconectado a %s:%d\r\n", tcp_client.host_ip,
-             tcp_client.host_port);
-
-    /*
-    char conn_msg[64];
-    snprintf(conn_msg, sizeof(conn_msg), "\r\nconectado a %s:%d\r\n",
-             tcp_client.host_ip, tcp_client.host_port);
-    uart_write_bytes(global_uart.NUM_PORT, UART_GREEN, strlen(UART_GREEN));
-    uart_write_bytes(global_uart.NUM_PORT, conn_msg, strlen(conn_msg));
-    uart_write_bytes(global_uart.NUM_PORT, UART_RESET, strlen(UART_RESET));
-    */
-
-    return ESP_OK;
-  }
-
-  // se agotaron los 5 intentos
-  /*
-   *  NOTA:
-   *  en estos puntos por ejemplo, una vez que se monte en el enotnro real, no
-   * habra manera de ver esta pantalla no tan facil, por lo que <archivo de
-   * apuntos, expligo un poco Debug de ESP32>
-   *
-   *
-   * */
-  ESP_LOGI(TAG, "\r\nno se pudo conectar con el servidor : %s:%d",
-           tcp_client.host_ip, tcp_client.host_port);
-
-  /*
-  char conn_msg[64];
-  snprintf(conn_msg, sizeof(conn_msg),
-           "\r\nno se pudo hacer la conexion con el servidor:%s:%d\r\n",
-           mariposa!+65HusP!  uart_write_bytes(global_uart, NUM_PORT, UART_RED,
-  strlen(UART_RED)); uart_write_bytes(global_uart.NUM_PORT, conn_msg,
-  strlen(conn_msg)); uart_write_bytes(global_uart.NUM_PORT, UART_RED,
-  strlen(UART_RED));
-  */
-
-  tcp_client.connected = 0;
-  return ESP_FAIL;
+}
+static void socket_error(const char *step, int e) {
+    ESP_LOGE(TAG, "%s: errno=%d (%s). %s", step, e, strerror(e), socket_hint(e));
 }
 
-/**
- *
- * funcion encargada de enviar datos hacia la RPI con la que se va a solicitar
- * recursos o algun datos que esta en ella.
- *
- * @UPDATE necesitamos modificar para la nueva estrucutra que necesitamos para
- * solcitar recursos por medio de SOCKET
- *
- */
-esp_err_t send_message() {
-
-  // lo maximo que puede enviar son 40 bytes estos puede variar
-  uint8_t buffer[160]; // aun esoty decidenido cual es tamanio optimo, por
-                       // mientras lo dejaremos asi.
-  int offset = 0;
-
-  //@DEBUG
-  char hex_buf[128] = {0};
-  int pos = 0;
-
-  switch (send_info.op_type) {
-
-  case OPReqCredWifi: {
-
-    uint16_t id = htons(HEADER);
-    memcpy(buffer + offset, &id, 2);
-    offset += 2;
-    // len of frame
-    // son 2 bytes porque ACTION + TYPE_FRAME = 1 byte
-    // DATA 1 byte aunque es cero pero es un espacio dentro del frame
-    // especialmente para ese dato
-    // en len no cuenta ni el < HEADER > ni el pripio < len> .
-    buffer[offset] = 2;
-    offset++;
-
-    // TYPE_FRAME + ACTION - son uno mismo con 1 nibble son 16 posibilidades
-    // de cada uno,
-
-    uint8_t req_cred = (eNoType << 4) | eReqWifi;
-    buffer[offset++] = req_cred;
-
-    // memset(buffer + offset, 0, MAX_DATA); // ponemos la parte de data en 0.
-    buffer[offset++] = 0;
-  } break;
-  case OP_ACK: {
-
-    /*
-     * el ACK le va a indicar a la rasberry que este ESP32, ya recibio las
-     * credenicales pero aun no podemos saber si son las correctas, porque
-     * primero necesitamos descoenctarnos de la AP actual para inciar en el
-     * WIFI normal
-     *
-     * */
-
-    uint16_t id = htons(ACK);
-    memcpy(buffer + offset, &id, 2);
-    offset += 2;
-
-    buffer[offset++] = 2; // 2 bytes de transferencia
-    buffer[offset++] = (eRespACK << 4) | action_none; // 0003 0000
-    buffer[offset++] = 1; // solo para diferenicar del NACK
-
-  } break;
-  case OP_NACK: {
-
-    uint16_t id = htons(ACK);
-    memcpy(buffer + offset, &id, 2);
-    offset += 2;
-    buffer[offset] = 0xFF;
-    offset++;
-    buffer[offset++] = 0xFF; // accion y tipo en maximo indciando error.
-    buffer[offset++] = 0;
-  } break;
-
-  default: {
-    ESP_LOGI(TAG, "OPCION INCORRECTA: ");
-  } break;
-  }
-  int sent = send(tcp_client.sock, buffer, offset, 0);
-  if (sent < 0) {
-    ESP_LOGE(TAG, "\r\nsend() fallo errno: %d\r\n", errno);
-
-    return ESP_FAIL;
-  }
-  for (int i = 0; i < offset; i++) {
-    pos += snprintf(hex_buf + pos, sizeof(hex_buf) - pos, "%02X ", buffer[i]);
-  }
-
-  ESP_LOGI(TAG, "DEBUG - FRAME SEND: %s", hex_buf);
-  return ESP_OK;
+void selfiq_tcp_close(void) {
+    if (tcp_client.sock >= 0) {
+        ESP_LOGI(TAG, "Cerrando socket TCP fd=%d", tcp_client.sock);
+        close(tcp_client.sock);
+        tcp_client.sock = -1;
+    }
+    tcp_client.connected = 0;
+    tcp_client.logged_in = 0;
 }
 
 esp_err_t update_tcp_config(const char *ip, uint16_t port) {
-
-  if (ip == NULL || port == 0)
-    return ESP_ERR_INVALID_ARG;
-
-  // Verificar que la dirección IPv4 sea válida
-  struct in_addr addr;
-
-  if (inet_pton(AF_INET, ip, &addr) != 1)
-    return ESP_ERR_INVALID_ARG;
-
-  // Reservar memoria para la IP
-  char *new_ip = malloc(strlen(ip) + 1);
-
-  if (new_ip == NULL)
-    return ESP_ERR_NO_MEM;
-
-  strcpy(new_ip, ip);
-
-  // Liberar configuración anterior
-  free(tcp_client.host_ip);
-
-  // Actualizar estructura TCP
-  tcp_client.host_ip = new_ip;
-  tcp_client.host_port = port;
-
-  tcp_client.connected = 0;
-  tcp_client.logged_in = 0;
-
-  return ESP_OK;
+    ESP_LOGI(TAG, "Preparando destino TCP: %s:%u", ip ? ip : "(null)", port);
+    struct in_addr parsed;
+    if (!ip || !port || inet_pton(AF_INET, ip, &parsed) != 1) {
+        ESP_LOGE(TAG, "Direccion IP o puerto invalido");
+        return ESP_ERR_INVALID_ARG;
+    }
+    char *copy = malloc(strlen(ip) + 1);
+    if (!copy) { ESP_LOGE(TAG, "Sin memoria para destino TCP"); return ESP_ERR_NO_MEM; }
+    strcpy(copy, ip);
+    selfiq_tcp_close();
+    free(tcp_client.host_ip);
+    tcp_client.host_ip = copy;
+    tcp_client.host_port = port;
+    ESP_LOGI(TAG, "Destino TCP listo");
+    return ESP_OK;
 }
 
-// debemos de limpiar y actualizar con las estrucutra nueva de nuestro frame
-// para la comnicacion con la RPI
-
-void recv_task(void *params) {
-  uint8_t rx_buffer[MAX_DATA];
-
-  while (1) {
-    char hex_buf[128] = {0};
-    int pos = 0;
-
-    int len = recv(tcp_client.sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-    if (len < 0) {
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        vTaskDelay(pdMS_TO_TICKS(50));
-        continue;
-      }
-
-      ESP_LOGE(TAG, "\r\nTCP_LIB: recv fallo errno: %d\r\n", errno);
-      tcp_client.connected = 0;
-      tcp_client.logged_in = 0;
-      if (tcp_client.sock >= 0) {
-        close(tcp_client.sock);
-        tcp_client.sock = -1;
-      }
-      xEventGroupSetBits(g_tcp_event_group, TCP_DISCONNECTED);
-      vTaskDelete(NULL); // esta tarea ya no tiene socket que leer
+/* Bounded waits with progress messages. No blocking connect or recv. */
+static int wait_socket(int fd, bool writing, int64_t deadline) {
+    for (;;) {
+        if (!esp_wifi.connected) { errno = ENETUNREACH; return -1; }
+        int64_t remaining = deadline - esp_timer_get_time();
+        if (remaining <= 0) { errno = ETIMEDOUT; return 0; }
+        fd_set fds, errors;
+        FD_ZERO(&fds); FD_SET(fd, &fds);
+        FD_ZERO(&errors); FD_SET(fd, &errors);
+        int64_t slice = remaining < 1000000 ? remaining : 1000000;
+        struct timeval tv = {.tv_sec = slice / 1000000, .tv_usec = slice % 1000000};
+        int n = select(fd + 1, writing ? NULL : &fds, writing ? &fds : NULL, &errors, &tv);
+        if (n > 0) {
+            if (FD_ISSET(fd, &errors)) {
+                int e = 0;
+                socklen_t size = sizeof(e);
+                if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &e, &size) < 0) return -1;
+                errno = e ? e : ECONNRESET;
+                return -1;
+            }
+            return 1;
+        }
+        if (n < 0 && errno != EINTR) return -1;
+        ESP_LOGI(TAG, "Esperando %s; quedan %lld s", writing ? "conexion/envio" : "respuesta RPI",
+                 (long long)((deadline - esp_timer_get_time() + 999999) / 1000000));
     }
+}
 
-    else if (len == 0) {
-      // conexion cerrada por el servidor
-
-      ESP_LOGI(TAG, "\r\nTCP_LIB: el servidor cerro la conexion\r\n");
-      tcp_client.connected = 0;
-      tcp_client.logged_in = 0;
-      close(tcp_client.sock);
-      tcp_client.sock = -1;
-      xEventGroupSetBits(g_tcp_event_group, TCP_DISCONNECTED);
-      vTaskDelete(NULL); // esta tarea ya no tiene socket que leer
+esp_err_t tcp_cliente_init(void) {
+    selfiq_tcp_close();
+    if (!tcp_client.host_ip || !tcp_client.host_port) return ESP_ERR_INVALID_STATE;
+    struct sockaddr_in address = {.sin_family = AF_INET, .sin_port = htons(tcp_client.host_port)};
+    if (inet_pton(AF_INET, tcp_client.host_ip, &address.sin_addr) != 1) return ESP_ERR_INVALID_ARG;
+    for (unsigned attempt = 1; attempt <= TCP_MAX_ATTEMPTS; ++attempt) {
+        if (!esp_wifi.connected) {
+            ESP_LOGE(TAG, "Sin Wi-Fi/IP; no se intenta TCP");
+            return ESP_ERR_INVALID_STATE;
+        }
+        ESP_LOGI(TAG, "Intento TCP %u/%u -> %s:%u (limite %u ms)", attempt,
+                 TCP_MAX_ATTEMPTS, tcp_client.host_ip, tcp_client.host_port, TCP_CONNECT_TIMEOUT_MS);
+        int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (fd < 0) { socket_error("socket()", errno); goto retry; }
+        tcp_client.sock = fd;
+        ESP_LOGI(TAG, "Socket creado fd=%d; iniciando connect()", fd);
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (flags < 0 || fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+            socket_error("fcntl(O_NONBLOCK)", errno); goto retry;
+        }
+        int rc = connect(fd, (struct sockaddr *)&address, sizeof(address));
+        if (rc < 0) {
+            if (errno != EINPROGRESS && errno != EWOULDBLOCK && errno != EALREADY) {
+                socket_error("connect()", errno); goto retry;
+            }
+            int64_t deadline = esp_timer_get_time() + TCP_CONNECT_TIMEOUT_MS * 1000LL;
+            if (wait_socket(fd, true, deadline) <= 0) {
+                socket_error("connect()/select()", errno); goto retry;
+            }
+            int error = 0;
+            socklen_t size = sizeof(error);
+            if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &size) < 0) {
+                socket_error("getsockopt(SO_ERROR)", errno); goto retry;
+            }
+            if (error) { socket_error("Conexion TCP", error); goto retry; }
+        }
+        tcp_client.connected = 1;
+        ESP_LOGI(TAG, "TCP conectado a %s:%u", tcp_client.host_ip, tcp_client.host_port);
+        return ESP_OK;
+retry:
+        selfiq_tcp_close();
+        if (attempt < TCP_MAX_ATTEMPTS) {
+            ESP_LOGW(TAG, "Reintento TCP en 2 segundos");
+            vTaskDelay(pdMS_TO_TICKS(2000));
+        }
     }
+    ESP_LOGE(TAG, "Agotados %u intentos TCP; se volvera a comprobar el AP", TCP_MAX_ATTEMPTS);
+    return ESP_FAIL;
+}
 
-    //+++++++++++++++++++++++++++imprimir lo que recibimos :  DEGUB - sera
-    // eliminado solo srive el etapa de desarrollo
-
-    for (int i = 0; i < len; i++) {
-      pos +=
-          snprintf(hex_buf + pos, sizeof(hex_buf) - pos, "%02X ", rx_buffer[i]);
+static esp_err_t transfer(uint8_t *buffer, size_t count, bool writing, int64_t deadline) {
+    size_t done = 0;
+    while (done < count) {
+        if (wait_socket(tcp_client.sock, writing, deadline) <= 0) {
+            socket_error(writing ? "Timeout/error al enviar" : "Timeout/error al recibir", errno);
+            return errno == ETIMEDOUT ? ESP_ERR_TIMEOUT : ESP_FAIL;
+        }
+        int n = writing ? send(tcp_client.sock, buffer + done, count - done, 0)
+                        : recv(tcp_client.sock, buffer + done, count - done, 0);
+        if (n > 0) {
+            done += n;
+            ESP_LOGI(TAG, "%s %u/%u bytes", writing ? "Enviados" : "Recibidos", (unsigned)done, (unsigned)count);
+        } else if (n < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) {
+            continue;
+        } else {
+            if (n == 0) ESP_LOGW(TAG, "RPI cerro el socket; trama incompleta (%u/%u bytes)", (unsigned)done, (unsigned)count);
+            else socket_error(writing ? "send()" : "recv()", errno);
+            return ESP_FAIL;
+        }
     }
+    return ESP_OK;
+}
 
-    ESP_LOGI(TAG, "REV RAW: %s\n", hex_buf);
+esp_err_t send_message(void) {
+    if (tcp_client.sock < 0 || !tcp_client.connected) return ESP_ERR_INVALID_STATE;
+    uint8_t bytes[5] = {0};
+    uint16_t header = send_info.op_type == OPReqCredWifi ? HEADER : ACK;
+    bytes[0] = header >> 8; bytes[1] = header & 255;
+    if (send_info.op_type == OPReqCredWifi) {
+        bytes[2] = 2; bytes[3] = 0x01; bytes[4] = 0;
+        ESP_LOGI(TAG, "TX solicitud: AB CD 02 01 00");
+    } else if (send_info.op_type == OP_ACK) {
+        bytes[2] = 2; bytes[3] = 0x30; bytes[4] = 1;
+        ESP_LOGI(TAG, "TX ACK de recepcion (no confirma conexion Wi-Fi final)");
+    } else if (send_info.op_type == OP_NACK) {
+        bytes[2] = 255; bytes[3] = 255; bytes[4] = 0;
+        ESP_LOGW(TAG, "TX NACK de formato");
+    } else return ESP_ERR_INVALID_ARG;
+    return transfer(bytes, sizeof(bytes), true, esp_timer_get_time() + TCP_IO_TIMEOUT_MS * 1000LL);
+}
 
-    uint8_t offset = 0;
-    TYPE_FORMAT_REQUEST_T *frame = pvPortMalloc(sizeof(TYPE_FORMAT_REQUEST_T));
-
-    if (frame == NULL) {
-
-      ESP_LOGE(TAG, "\r\nsin memoria\r\n");
-      continue;
+esp_err_t tcp_request_wifi(selfiq_credentials_t *credentials) {
+    if (!credentials) return ESP_ERR_INVALID_ARG;
+    send_info.op_type = OPReqCredWifi;
+    esp_err_t err = send_message();
+    if (err != ESP_OK) return err;
+    ESP_LOGI(TAG, "Solicitud enviada; esperando cabecera y credenciales (limite %u ms)", TCP_IO_TIMEOUT_MS);
+    uint8_t prefix[3], body[MAX_DATA + 1];
+    int64_t deadline = esp_timer_get_time() + TCP_IO_TIMEOUT_MS * 1000LL;
+    err = transfer(prefix, 3, false, deadline);
+    if (err != ESP_OK) return err;
+    uint16_t header = (uint16_t)prefix[0] << 8 | prefix[1];
+    unsigned length = prefix[2];
+    ESP_LOGI(TAG, "RX cabecera=0x%04X LEN=%u", header, length);
+    if (header == ACK && length == 255) {
+        err = transfer(body, 2, false, deadline);
+        if (err != ESP_OK) return err;
+        if (body[0] != 255 || body[1] != 0) {
+            ESP_LOGE(TAG, "NACK mal formado"); return ESP_FAIL;
+        }
+        ESP_LOGW(TAG, "RPI respondio NACK: aun no puede entregar credenciales. Compruebe que RPI conecto a la red final");
+        return ESP_ERR_INVALID_STATE;
     }
-
-    uint16_t aux;
-    memcpy(&frame->header, &rx_buffer[offset], 2);
-    offset += 2;
-    aux = frame->header;
-    frame->header = ntohs(aux);
-
-    // @update necesitamos modificar establecer otras caberas
-    if (frame->header == HEADER) {
-
-      // el len creo que no superara los 255 datos en binario,
-      memcpy(&frame->len, &rx_buffer[offset], 1);
-      offset++;
-
-      uint8_t action_res = rx_buffer[offset++];
-
-      frame->type_frame = (action_res >> 4) & 0x0f;
-      frame->action = (action_res) & 0x0f; // de aqui sacaremos por ejemplo con
-                                           // WIFI si es de empresa o no la red
-
-      // este es un punto importante porque de este punto indicaremos si lo que
-      // viene
-      uint8_t value_len =
-          (frame->len > 3) ? (frame->len - 3)
-                           : 0; // del frame quitamos header y len para
-                                // quedarnos con los datos improtates del frame
-      if (value_len > MAX_DATA)
-        value_len = MAX_DATA;
-      if (value_len > 0) {
-        memcpy(frame->data, &rx_buffer[offset], value_len);
-      }
+    if (header != ACK || length < 1 || length > MAX_DATA + 1) {
+        ESP_LOGE(TAG, "Cabecera o LEN fuera de rango; no se copian datos"); return ESP_FAIL;
     }
-    if (frame->header == ACK && rx_buffer[offset] == 0xff) {
-      // llego un nack
-      // la rasberry no comprendio lo que recibio
-      memcpy(&frame->len, &rx_buffer[offset], 1);
-      offset++;
-
-      // aunque es contenido realmente basura, pues es para un mayor
-      // aseguramiento sobre lo que llego, type_frame y action juntos seran
-      // 0xFF y data 0, indicando el error del NACK
-      uint8_t action_res = rx_buffer[offset++];
-
-      frame->type_frame = (action_res >> 4) & 0x0f;
-      frame->action = (action_res) & 0x0f;
-
-      frame->data[offset] = 0;
+    err = transfer(body, length, false, deadline);
+    if (err != ESP_OK) return err;
+    const char *why = NULL;
+    if (!selfiq_decode_credentials(header, length, body, credentials, &why)) {
+        ESP_LOGE(TAG, "Respuesta rechazada: %s", why);
+        send_info.op_type = OP_NACK;
+        (void)send_message();
+        return ESP_FAIL;
     }
-
-    if (frame->header == ACK && rx_buffer[offset] != 0xff) {
-      // se recibio un ACK
-      memcpy(&frame->len, &rx_buffer[offset], 1);
-      offset++;
-
-      uint8_t type_frame = rx_buffer[offset++];
-      frame->type_frame =
-          type_frame & 0x0f; // quiero apagar la parte MSB del byte, y
-                             // quedarme solo con la parte baja
-      uint8_t value_len =
-          (frame->len > 3) ? (frame->len - 3)
-                           : 0; // del frame quitamos header y len para
-                                // quedarnos con los datos improtates del frame
-      // copiamos la patte de la infromacion donde vienen las credenicales.
-      if (value_len > MAX_DATA)
-        value_len = MAX_DATA;
-      if (value_len > 0) {
-        memcpy(frame->data, &rx_buffer[offset], value_len);
-      }
-    }
-    // encolar
-    if (xQueueSend(tcp_rx_queue, &frame, 0) != pdTRUE) {
-      vPortFree(frame);
-    }
-  }
+    ESP_LOGI(TAG, "Credenciales TLV validas: tipo=%u SSID=\"%s\" (sin mostrar password/usuario)", credentials->kind, credentials->ssid);
+    send_info.op_type = OP_ACK;
+    err = send_message();
+    if (err != ESP_OK) ESP_LOGW(TAG, "No pudo enviarse ACK, pero las credenciales recibidas son validas");
+    return ESP_OK;
 }

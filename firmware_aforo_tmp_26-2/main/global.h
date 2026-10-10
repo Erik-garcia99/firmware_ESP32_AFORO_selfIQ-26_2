@@ -12,6 +12,7 @@
 #define GLOBAL_H
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include <stdint.h>
 
 // macros
 #define TRUE 1
@@ -19,9 +20,10 @@
 
 #define HEADER 0xABCD
 #define ACK 0x5433
-#define MAX_DATA 95
-#define SSID_LEN_MAX 33
-#define PSWD_LEN_MAX 26
+#define MAX_DATA 160
+#define SSID_LEN_MAX 32
+#define PSWD_LEN_MAX 63
+#define PSWD_LEN_MIN 8
 #define USER_LEN_MAX 31
 
 //+++++++++++++++++++++++++++++ Bits del grupo de eventos
@@ -81,7 +83,7 @@ extern DATA_FIELD_T data_field_t;
  *    --> lo cuales puede ser:
  *          Peticion : 0x0
  *          Error (NACK) : 0xCAFE
- * @member len : tamanio completo del frame
+ * @member len : bytes restantes: TYPE/ACTION + DATA; excluye HEADER y LEN
  * @member action : que accion queremos hacer con la rpi cunado esta en mood AP
  *    --> puede ser, del enum < action >
  * @member type_frame :
