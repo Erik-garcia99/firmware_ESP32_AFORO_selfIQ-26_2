@@ -1,0 +1,8 @@
+Command: ninja all
+[1/4] cd /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build && /home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python /opt/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/partition_table/partition-table.bin /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/firmware_aforo_tmp_26-2.bin
+firmware_aforo_tmp_26-2.bin binary size 0xd2840 bytes. Smallest app partition is 0x100000 bytes. 0x2d7c0 bytes (18%) free.
+[2/4] Performing build step for 'bootloader'
+[1/1] cd /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/bootloader && /home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python /opt/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x1000 /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/bootloader/bootloader.bin
+Bootloader binary size 0x65f0 bytes. 0xa10 bytes (9%) free.
+[3/4] No install step for 'bootloader'
+[4/4] Completed 'bootloader'
