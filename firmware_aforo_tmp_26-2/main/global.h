@@ -39,16 +39,20 @@ extern QueueHandle_t tcp_rx_queue;
 
 // sera el tipo que operacion que ser, mantenemos ACK y NACK para mas
 // infromacion sobre si llegaron las peticiones o no
-typedef enum {
-  OPReqCredWifi = 0x00, // L:S
-  OP_ACK,               // ACK
-  OP_NACK,              // NACK
+typedef enum
+{
+  // L:S
+  OP_ACK = 0,    // ACK
+  OP_NACK,       // NACK
+  OPReqCredWifi, // la ESP quiere solcitar las credenicales WIFI del lugar
+  OPReqBroker, // la ESP quiere solciitar la ip del broker mosquitto para MQTT.
 } TYPE_OP_TYPE_T;
 extern TYPE_OP_TYPE_T op_type;
 
 // accion que queremos haacer entre la ESP32 y la RPI, por el momento solo se
 // tiene para hacer login
-typedef enum {
+typedef enum
+{
   action_none = 0x00,
   eReqWifi, // soliciar credeniclaes WIFI a la RPI.
   eRespWifi,
@@ -57,15 +61,18 @@ typedef enum {
 
 extern ACTION_T action;
 
-typedef enum {
+typedef enum
+{
   eNoType = 0x00,
   eWifiDefault,
   eWifiEnterprise,
   eRespACK,
+  eRespNACK,
 } TYPE_FRAME_T;
 extern TYPE_FRAME_T type_frame;
 
-typedef enum {
+typedef enum
+{
   eDataSSID = 0x69, // para las 2 tipo de redes sera este mimso id para inidcar
                     // el inicio
   eDataPSWD = 0x70, // igual
@@ -96,7 +103,8 @@ extern DATA_FIELD_T data_field_t;
  *
  *********************************************************/
 
-typedef struct {
+typedef struct
+{
   uint16_t header; // >> head of frame
   uint8_t len;     // >> lenght of frame
   TYPE_FRAME_T type_frame : 4;
@@ -104,7 +112,8 @@ typedef struct {
   uint8_t data[MAX_DATA];
 } TYPE_FORMAT_REQUEST_T;
 
-typedef struct {
+typedef struct
+{
   TYPE_OP_TYPE_T op_type;               // que operacion vamos a relaizar
   TYPE_FORMAT_REQUEST_T format_request; // trametos la trama a enviar
 } TYPE_SEND_INFO_T;
