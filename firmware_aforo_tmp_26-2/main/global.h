@@ -24,12 +24,10 @@
 #define SSID_LEN_MAX 32
 #define PSWD_LEN_MAX 63
 #define PSWD_LEN_MIN 8
-#define USER_LEN_MAX 31
 
 //+++++++++++++++++++++++++++++ Bits del grupo de eventos
 // la peticion TCP recibio las credenciales con extoito: SSID/PSWD
-// socket TCP
-
+// socket TYPE_OP_TYPE_T
 //++++++++++++++++++++++++++++++Constantes generales
 extern QueueHandle_t tcp_rx_queue;
 
@@ -39,8 +37,7 @@ extern QueueHandle_t tcp_rx_queue;
 
 // sera el tipo que operacion que ser, mantenemos ACK y NACK para mas
 // infromacion sobre si llegaron las peticiones o no
-typedef enum
-{
+typedef enum {
   // L:S
   OP_ACK = 0,    // ACK
   OP_NACK,       // NACK
@@ -51,32 +48,34 @@ extern TYPE_OP_TYPE_T op_type;
 
 // accion que queremos haacer entre la ESP32 y la RPI, por el momento solo se
 // tiene para hacer login
-typedef enum
-{
+typedef enum {
   action_none = 0x00,
   eReqWifi, // soliciar credeniclaes WIFI a la RPI.
   eRespWifi,
+  eReqBroker = 0x3,
+  eRespBroker = 0x4,
   keepAlive = 0x5,
 } ACTION_T;
 
 extern ACTION_T action;
 
-typedef enum
-{
+typedef enum {
   eNoType = 0x00,
   eWifiDefault,
   eWifiEnterprise,
   eRespACK,
   eRespNACK,
+  eBroker = 0x5,
 } TYPE_FRAME_T;
 extern TYPE_FRAME_T type_frame;
 
-typedef enum
-{
+typedef enum {
   eDataSSID = 0x69, // para las 2 tipo de redes sera este mimso id para inidcar
                     // el inicio
   eDataPSWD = 0x70, // igual
-  eDataUSR = 0x75,  // solo en el caso de empresa se usara este.
+  eDataBrokerIP = 0x76,   // IPv4: cuatro bytes binarios
+  eDataBrokerPort = 0x77, // uint16 en orden de red
+  eDataUSR = 0x75,        // solo en el caso de empresa se usara este.
 } DATA_FIELD_T;
 
 extern DATA_FIELD_T data_field_t;
@@ -103,8 +102,7 @@ extern DATA_FIELD_T data_field_t;
  *
  *********************************************************/
 
-typedef struct
-{
+typedef struct {
   uint16_t header; // >> head of frame
   uint8_t len;     // >> lenght of frame
   TYPE_FRAME_T type_frame : 4;
@@ -112,8 +110,7 @@ typedef struct
   uint8_t data[MAX_DATA];
 } TYPE_FORMAT_REQUEST_T;
 
-typedef struct
-{
+typedef struct {
   TYPE_OP_TYPE_T op_type;               // que operacion vamos a relaizar
   TYPE_FORMAT_REQUEST_T format_request; // trametos la trama a enviar
 } TYPE_SEND_INFO_T;

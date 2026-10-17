@@ -1,82 +1,112 @@
+/* *********************************************
+ *              selfIQ 2026-2
+ *
+ * @autor Erik Garcia Chavez
+ * @date octuber 2026
+ * @assginature : proyecto de carrera
+ * @teacher : Jose Isabel Garcia Rocha
+ *
+ ************************************************* */
+
+// liberias estanadar
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// modulos de freerots
-#include <freertos/FreeRTOS.h>
-#include <freertos/event_groups.h>
-#include <freertos/queue.h>
-#include <freertos/task.h>
-
-// drivers
-#include <driver/gpio.h>
-#include <driver/uart.h>
-
 // logs
-#include <esp_err.h>
-#include <esp_log.h>
-#include <nvs.h>
-#include <nvs_flash.h>
+#include "esp_err.h"
+#include "esp_log.h"
+// flash
+#include "nvs.h"
+#include "nvs_flash.h"
+// wifi (para leer lo que el stack guardo en flash)
+#include "esp_wifi.h"
 
-// wifi
-#include <esp_http_server.h> // este se utiliza, porque cunado no se teine ccredenciales
-#include <esp_wifi.h>
-#include <lwip/err.h>
-#include <lwip/sys.h>
-#include <nvs_flash.h>
-// la ESP inica en modo acces point, cunado se tiene guardadas crecencuales en
-// flash inica en modo estacion (STA)
+// freertos
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
-// biblioteclas propias
+// librerias propias
 #include "global.h"
-#include "modules/DHT11/dht11_lib.h"
-#include "modules/HTTP/http_setup.h"
-#include "modules/MQTT/mqtt_lib.h"
-//#include "modules/UART/uart_lib.h"
+#include "modules/TCP/tcp_lib.h"
 #include "modules/WIFI/wifi_lib.h"
-// macros
 
-//+++++++++++++ colas
-// estas colas las utilice tanto para enviar datos entre modulos como ingresar
-// por UART, mediante teclado infromacion esto en el caso se debugear, porque
-// despues lo que usaremos para comunicarnos sera MQTT
-//QueueHandle_t flow_data_queue;
-//QueueHandle_t uart_event;
-//QueueHandle_t uart1_tx_queue;
+//+++++++++++++++++++++++++++++++++++ colas
 
-//+++++++++++++ grupos de eventos
-EventGroupHandle_t s_wifi_event_group;
-esp_wifi_t esp_wifi;
+QueueHandle_t
+    tcp_rx_queue; // cola que usaremos como swap entre el modulo de TCP que
+                  // recibe el frame y main que desempaqueta la infromacion.
 
-// semaforos?
+//++++++++++++++++++++++++++++++++++ grupo de eventos
+EventGroupHandle_t g_tcp_event_group;
 
-// variables globales
+//++++++++++++++++++++++++++++++++ macros
 
-char g_wifi_ssid[33] = {0};
-char g_wifi_pass[65] = {0};
-char g_broker_ip[16] = {0}; // solo la IP, luego se arma la URI
+// namespace propio en NVS donde guardamos nuestros datos y sus checksums
+#define NVS_NS "selfiq_cfg"
+#define KEY_WIFI_SUM "wifi_sum" // checksum de SSID + pswd
+#define KEY_TCP_IP "tcp_ip"
+#define KEY_TCP_PORT "tcp_port"
+#define KEY_TCP_SUM "tcp_sum" // checksum de IP + PORT
 
-// funciones
-// este se comenta porque este lo que hace es parsear, separar los tokens por input desde UART, por lo que por ahora no me sirve, 
-//char **parse_input(char *line);
-esp_err_t update_setup_cred(char *key, char *anchor, char *pswd_ent,
-                            char *identificator);
+//++++++++++++++++++++++++++++++++ varibales globales
 
-esp_err_t nvs_save_str(const char *key, const char *value);
-esp_err_t nvs_load_str(const char *key, char *buf, size_t len);
+const char *TAG = "MAIN: ";
 
-// tareas
+//++++++++++++++++++++++++++++++++ estrucutras
+TYPE_FORMAT_REQUEST_T format_reques = {0};
+TYPE_SEND_INFO_T send_info = {0};
+TYPE_ESP_WIFI_T esp_wifi = {0};
+TYPE_TCP_CLIENT_T tcp_client = {0};
 
-void task_cmd_uart(void *params);
+//++++++++++++++++++++++++++++++++++ enums
+
+TYPE_OP_TYPE_T eOp_type;
+ACTION_T eAction;
+TYPE_FRAME_T eType_frame;
+DATA_FIELD_T eData_field_t;
+
+//+++++++++++++++++++++++++++++++funciones
+
+// static uint8_t request_credentials(char **ssid, char **pswd);
+
+// funciones que usare para guardar crecnuales en flash, (WIFI lo hace cons us
+// propias funciones)
+esp_err_t save_cred_tcp(void);
+esp_err_t load_cred_tcp(void);
+
+/*
+ * @brief funcion que se encarga de actualiuzar las credencuales.
+ *
+ * */
+esp_err_t update_setup_cred(char *key, void *anchor, uint8_t identificator);
+
+/*
+ * @brief suma el valor de todos los bytes de los datos.
+ * WIFI: key = SSID, anchor = pswd (string)
+ * TCP:  key = IP,   anchor = puerto (uint16_t *)
+ * */
+uint64_t checksum(const char *key, const void *anchor, uint8_t identificator);
+
+// guarda en flash el checksum de las credenciales WIFI
+static esp_err_t save_wifi_sum(uint64_t sum);
+// lee de flash lo que guardo el stack WIFI, recalcula la suma y la compara con
+// la guardada. TRUE si existen y coinciden
+static uint8_t wifi_cred_valid(void);
+
+//++++++++++++++++++++++++++++++++ tareas
 
 void app_main(void) {
 
-  /**
-   * lo primero que tendriamos que hacer es inciar WIFI,
-   *
-   * */
+  // variables
+  esp_err_t ret;
+  EventBits_t bits = 0;
+  // inicalizacion de varibales
+  tcp_rx_queue = xQueueCreate(10, sizeof(TYPE_FORMAT_REQUEST_T *));
 
-  esp_err_t ret = nvs_flash_init();
+  // incializacion de flash para cargar o escribir en flash
+  ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
       ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
     ESP_ERROR_CHECK(nvs_flash_erase());
@@ -84,224 +114,256 @@ void app_main(void) {
   }
   ESP_ERROR_CHECK(ret);
 
-  // Colas
-  flow_data_queue = xQueueCreate(10, sizeof(char *));
-  uart1_tx_queue = xQueueCreate(5, sizeof(char *));
-
-  // UART0 (debug)
-  QueueHandle_t uart0_evt;
-  uart_init(UART_NUM_0, 115200, UART_DATA_8_BITS, UART_PARITY_DISABLE,
-            UART_STOP_BITS_1, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE,
-            &uart0_evt);
-  uart_task_config_t uart0_cfg = {.port = UART_NUM_0, .event_queue = uart0_evt};
-  xTaskCreate(task_uart, "task_uart", 4096, &uart0_cfg, 9, NULL);
-
-  // UART1 (solo usado por master para SET_WIFI)
-  QueueHandle_t uart1_evt;
-  uart_init(UART_NUM_1, 115200, UART_DATA_8_BITS, UART_PARITY_DISABLE,
-            UART_STOP_BITS_1, 18, 19, &uart1_evt);
-  uart_task_config_t uart1_cfg = {.port = UART_NUM_1, .event_queue = uart1_evt};
-  xTaskCreate(task_uart, "task_uart1", 4096, &uart1_cfg, 8, NULL);
-
-  xTaskCreate(task_cmd_uart, "task_cmd_uart", 4096, NULL, 8, NULL);
-
-  // Grupo de eventos WiFi
-  s_wifi_event_group = xEventGroupCreate();
-
-  // --- Carga/obtencion de credenciales WiFi
-  bool creds_in_nvs = false;
-  if (nvs_load_str("wifi_ssid", g_wifi_ssid, sizeof(g_wifi_ssid)) == ESP_OK &&
-      nvs_load_str("wifi_pass", g_wifi_pass, sizeof(g_wifi_pass)) == ESP_OK) {
-    creds_in_nvs = true;
+  // credenciales TCP guardadas (se validan con su checksum)
+  ret = load_cred_tcp();
+  if (ret != ESP_OK) {
+    ESP_LOGW(TAG, "credenciales TCP no cargadas: %s", esp_err_to_name(ret));
   }
 
-  if (!creds_in_nvs) {
-    // AP + página web
-    char msg[] = "\r\n[WIFI] Sin credenciales guardadas. Iniciando punto de "
-                 "acceso...\r\n";
-    uart_write_bytes(UART_NUM_0, msg, sizeof(msg) - 1);
-    wifi_init_ap();
-    start_http_setup_server(s_wifi_event_group);
-    xEventGroupWaitBits(s_wifi_event_group, WIFI_CREDS_RECEIVED, pdTRUE,
-                        pdFALSE, portMAX_DELAY);
-    stop_http_setup_server();
-    wifi_stop_ap();
-  }
-
-  // Conectar a WiFi en modo estación
-  update_setup_cred(g_wifi_ssid, g_wifi_pass, NULL, "SSID");
-  xEventGroupSetBits(s_wifi_event_group, WIFI_CREDS_READY);
+  // WIFI: primero intenta con las credenciales guardadas en flash
   wifi_init_sta();
-  // Restaurar el bit que fue borrado en wifi_init_sta()
-  xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+
+  if (wifi_cred_valid()) {
+    wifi_connect_saved();
+  } else {
+    ESP_LOGW(TAG, "credenciales WIFI inexistentes o checksum invalido");
+    xEventGroupSetBits(g_wifi_event_group, WIFI_NO_CREDS_BIT);
+  }
+
+  while (1) {
+    // primero se intenta conectar con las credenclaes que puede estar guardasd
+    // en flash
+    bits = xEventGroupWaitBits(g_wifi_event_group,
+                               WIFI_CONNECTED_BIT | WIFI_FAIL_BIT |
+                                   WIFI_NO_CREDS_BIT,
+                               pdTRUE, pdFALSE, portMAX_DELAY);
+
+    if (bits & WIFI_CONNECTED_BIT) {
+      ESP_LOGI(TAG, "WIFI conectado");
+      break;
+      // si me pude conectar al WIFI el proximo paso es conectarme a TCP
+    } else if (bits & WIFI_NO_CREDS_BIT) {
+
+      ESP_LOGW(TAG,
+               "imposble conectarse, no hay crenciales o fallo al intentar");
+      // tenemos 2 opciones
+      /* realmente la esp32 viene vacia y no tiene crencuales guardadas --> por
+       * lo que lo mas porabale es que la red ed la rasberry este levantada al
+       * igual que le TCP_server, por lo que por este no hay problema
+       *
+       * puede que las credenicales esten bien pero hay una falla en internet,
+       *
+       * en otro caso tiene credennciales guardadas, en este caso, pueden ser
+       * uno de los sigueintes casos :
+       *
+       * la red esta caida.
+       * se cambio las credenciales de red
+       * se corrompieron las credncieles
+       *
+       * --> al final cada ESP con MQTT tendra que enviar un keep_alive,
+       * entpnces si no se recibe un keep_alive en un lapso de 5 a 10 minutos se
+       * va a concluir que algo paso con la conexion en ese esp32
+       *
+       * por lo que indicara en la APP se se incie comunicacion, es cunado se
+       * levanta TCP, y tiene que inciar una comnucacion entre la rasberry y la
+       * esp32.
+       *
+       * */
+
+      // en este caso
+
+      continue;
+    } else if (bits & WIFI_FAIL_BIT) {
+    }
+  }
 }
 
-// NVS helpers
+// el seungdo parametro represetna en WIFI la contrasneia
+// en TCP represeta en puerto
+// como en uno es string y en otro es numerico, se utiliza de tipoc void* para
+// evitar el problema de casting, accedindo a memoria
+esp_err_t update_setup_cred(char *key, void *anchor, uint8_t identificator) {
 
-esp_err_t nvs_save_str(const char *key, const char *value) {
-  nvs_handle_t handle;
-  esp_err_t err = nvs_open("storage", NVS_READWRITE, &handle);
-  if (err != ESP_OK)
+  if (identificator == eTCP_CRED_update) {
+    // entonces debemos de actualizar las credenicales de TPC
+    uint16_t *port = (uint16_t *)anchor;
+
+    tcp_client.host_port = *port;
+    tcp_client.host_ip = realloc(tcp_client.host_ip, strlen(key) + 1);
+
+    if (tcp_client.host_ip == NULL) {
+      ESP_LOGE(TAG, "no se pudo asingar memoria\n");
+      return ESP_FAIL;
+    }
+    strcpy(tcp_client.host_ip, key);
+
+    // guarda IP + PORT y su checksum en flash
+    return save_cred_tcp();
+
+  } else if (identificator == eWIFI_CRED_UPDATE) {
+    // key = SSID, anchor = pswd. wifi_set_credentials las guarda en flash (lo
+    // hace el stack) y vuelve a intentar la conexion
+    esp_err_t ret = wifi_set_credentials(key, (const char *)anchor);
+    if (ret != ESP_OK) {
+      return ret;
+    }
+
+    // guardamos la suma de lo que acabamos de mandar a flash
+    return save_wifi_sum(checksum(key, anchor, eWIFI_CRED_UPDATE));
+  }
+
+  return ESP_ERR_INVALID_ARG;
+}
+
+// vamos a sumar los valores, totales de los datos
+// SSID + pswd
+// IP + PORT
+        {
+  uint64_t total = 0;
+
+  // key siempre es un string (SSID o IP): sumamos el valor de cada caracter
+  for (size_t i = 0; key[i] != '\0'; i++) {
+    total += (uint8_t)key[i];
+  }
+
+  if (identificator == eTCP_CRED_update) {
+    // anchor es el puerto: es un numero, se suma directo
+    total += *(const uint16_t *)anchor;
+
+  } else if (identificator == eWIFI_CRED_UPDATE) {
+    // anchor es la contrasenia: otro string, se suma caracter por caracter
+    const char *pswd = (const char *)anchor;
+    for (size_t i = 0; pswd[i] != '\0'; i++) {
+      total += (uint8_t)pswd[i];
+    }
+  }
+
+  return total;
+}
+
+//+++++++++++++++++++++++++++++++ flash: TCP
+
+esp_err_t save_cred_tcp(void) {
+  if (tcp_client.host_ip == NULL) {
+    return ESP_ERR_INVALID_STATE;
+  }
+
+  uint16_t port = tcp_client.host_port;
+  uint64_t sum = checksum(tcp_client.host_ip, &port, eTCP_CRED_update);
+
+  nvs_handle_t h;
+  esp_err_t err = nvs_open(NVS_NS, NVS_READWRITE, &h);
+  if (err != ESP_OK) {
     return err;
-  err = nvs_set_str(handle, key, value);
-  if (err == ESP_OK)
-    nvs_commit(handle);
-  nvs_close(handle);
+  }
+
+  err = nvs_set_str(h, KEY_TCP_IP, tcp_client.host_ip);
+  if (err == ESP_OK) {
+    err = nvs_set_u16(h, KEY_TCP_PORT, port);
+  }
+  if (err == ESP_OK) {
+    err = nvs_set_u64(h, KEY_TCP_SUM, sum);
+  }
+  if (err == ESP_OK) {
+    err = nvs_commit(h); // sin commit no se escribe en flash
+  }
+
+  nvs_close(h);
   return err;
 }
 
-esp_err_t nvs_load_str(const char *key, char *buf, size_t len) {
-  nvs_handle_t handle;
-  esp_err_t err = nvs_open("storage", NVS_READONLY, &handle);
-  if (err != ESP_OK)
+esp_err_t load_cred_tcp(void) {
+  nvs_handle_t h;
+  esp_err_t err = nvs_open(NVS_NS, NVS_READONLY, &h);
+  if (err != ESP_OK) {
     return err;
-  size_t required = len;
-  err = nvs_get_str(handle, key, buf, &required);
-  nvs_close(handle) return err;
-}
+  }
 
-void task_cmd_uart(void *params) {
-  char *cmd_receive;
-  char error_msg[120];
-  int len;
+  char *ip = NULL;
+  size_t len = 0;
+  uint16_t port = 0;
+  uint64_t saved_sum = 0;
 
-  while (1) {
-    if (xQueueReceive(flow_data_queue, &cmd_receive, portMAX_DELAY)) {
-
-      char **tokens = parse_input(cmd_receive);
-
-      if (tokens == NULL || tokens[0] == NULL) {
-        len = snprintf(error_msg, sizeof(error_msg),
-                       "\r\nMAIN -> ERR: No se recibieron comandos\r\n");
-        uart_write_bytes(UART_NUM_0, error_msg, len);
-        free(cmd_receive);
-        continue;
-      }
-
-      if (strcmp(tokens[0], "SET_WIFI") == 0) {
-        if (tokens[1] == NULL) {
-          len = snprintf(error_msg, sizeof(error_msg),
-                         "\r\nMAIN: error al parsear\r\n");
-          uart_write_bytes(UART_NUM_0, error_msg, len);
-        } else {
-          if (tokens[2] == NULL) {
-            len = snprintf(error_msg, sizeof(error_msg),
-                           "\r\nMAIN -> ERR: formato incorrecto\r\n");
-            uart_write_bytes(UART_NUM_0, error_msg, len);
-          } else if (update_setup_cred(tokens[1], tokens[2], NULL, "SSID") ==
-                     ESP_OK) {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_CREDS_READY);
-          } else {
-            len = snprintf(error_msg, sizeof(error_msg),
-                           "\r\nMAIN -> ERR: no memoria\r\n");
-            uart_write_bytes(UART_NUM_0, error_msg, len);
-          }
-        }
-      }
-
-      // ── ENT_WIFI ──────────────────────────────────────────────────────
-      else if (strcmp(tokens[0], "ENT_WIFI") == 0) {
-        if (tokens[1] == NULL) {
-          len = snprintf(error_msg, sizeof(error_msg),
-                         "\r\nMAIN -> ERR: formato incorrecto\r\n");
-          uart_write_bytes(UART_NUM_0, error_msg, len);
-        } else if (strncmp(tokens[1], "DFT_ENT_", 8) == 0) {
-          int found = 0;
-          for (int i = 0; i < (int)DEFAULT_ENT_PROFILES_COUNT; i++) {
-            if (strcmp(tokens[1], default_ent_profiles[i].alias) == 0) {
-              found = 1;
-              if (update_setup_cred((char *)default_ent_profiles[i].ssid,
-                                    (char *)default_ent_profiles[i].pswd,
-                                    (char *)default_ent_profiles[i].user,
-                                    "ENT") == ESP_OK)
-                xEventGroupSetBits(s_wifi_event_group, WIFI_CREDS_READY);
-              else {
-                len = snprintf(error_msg, sizeof(error_msg),
-                               "\r\nMAIN: error credenciales\r\n");
-                uart_write_bytes(UART_NUM_0, error_msg, len);
-              }
-              break;
-            }
-          }
-          if (!found) {
-            len = snprintf(error_msg, sizeof(error_msg),
-                           "\r\nMAIN: perfil ENT no encontrado\r\n");
-            uart_write_bytes(UART_NUM_0, error_msg, len);
-          }
-        } else {
-          if (tokens[2] == NULL || tokens[3] == NULL) {
-            len = snprintf(error_msg, sizeof(error_msg),
-                           "\r\nMAIN -> ERR: formato incorrecto\r\n");
-            uart_write_bytes(UART_NUM_0, error_msg, len);
-          } else if (update_setup_cred(tokens[1], tokens[3], tokens[2],
-                                       "ENT") == ESP_OK) {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_CREDS_READY);
-          } else {
-            len = snprintf(error_msg, sizeof(error_msg),
-                           "\r\nMAIN -> ERR: no memoria\r\n");
-            uart_write_bytes(UART_NUM_0, error_msg, len);
-          }
-        }
-      }
-
-      free(cmd_receive);
+  // con buffer NULL, nvs_get_str solo devuelve el tamanio (incluye el '\0')
+  err = nvs_get_str(h, KEY_TCP_IP, NULL, &len);
+  if (err == ESP_OK) {
+    ip = malloc(len);
+    if (ip == NULL) {
+      err = ESP_ERR_NO_MEM;
     }
   }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// parse_input
-// ─────────────────────────────────────────────────────────────────────────────
-char **parse_input(char *line) {
-  char **tokens = malloc(6 * sizeof(char *));
-  char *token;
-  int position = 0;
-
-  token = strtok(line, ":");
-  while (token != NULL) {
-    if (position >= 5)
-      break;
-    tokens[position++] = strdup(token);
-    token = strtok(NULL, ":");
+  if (err == ESP_OK) {
+    err = nvs_get_str(h, KEY_TCP_IP, ip, &len);
   }
-  tokens[position] = NULL;
-  return tokens;
-}
+  if (err == ESP_OK) {
+    err = nvs_get_u16(h, KEY_TCP_PORT, &port);
+  }
+  if (err == ESP_OK) {
+    err = nvs_get_u64(h, KEY_TCP_SUM, &saved_sum);
+  }
+  nvs_close(h);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// update_setup_cred
-// ─────────────────────────────────────────────────────────────────────────────
-esp_err_t update_setup_cred(char *ssid, char *pswd, char *user, char *type) {
-  if (strcmp(type, "SSID") == 0) {
-    esp_wifi.ssid = realloc(esp_wifi.ssid, strlen(ssid) + 1);
-    esp_wifi.pswd = realloc(esp_wifi.pswd, strlen(pswd) + 1);
-    if (esp_wifi.ssid != NULL && esp_wifi.pswd != NULL) {
-      strcpy(esp_wifi.ssid, ssid);
-      strcpy(esp_wifi.pswd, pswd);
-      free(esp_wifi.user_name);
-      esp_wifi.user_name = NULL;
-      esp_wifi.type_connected = 0;
-      return ESP_OK;
-    }
-    uart_write_bytes(UART_NUM_0, "ERR:NO_MEM\n", 11);
-    return ESP_FAIL;
+  // recalculamos la suma con lo que leimos y la comparamos con la guardada
+  if (err == ESP_OK && checksum(ip, &port, eTCP_CRED_update) != saved_sum) {
+    err = ESP_ERR_INVALID_CRC;
   }
 
-  if (strcmp(type, "ENT") == 0) {
-    esp_wifi.ssid = realloc(esp_wifi.ssid, strlen(ssid) + 1);
-    esp_wifi.pswd = realloc(esp_wifi.pswd, strlen(pswd) + 1);
-    esp_wifi.user_name = realloc(esp_wifi.user_name, strlen(user) + 1);
-    if (esp_wifi.ssid != NULL && esp_wifi.pswd != NULL &&
-        esp_wifi.user_name != NULL) {
-      strcpy(esp_wifi.ssid, ssid);
-      strcpy(esp_wifi.pswd, pswd);
-      strcpy(esp_wifi.user_name, user);
-      esp_wifi.type_connected = 1;
-      return ESP_OK;
-    }
-    uart_write_bytes(UART_NUM_0, "ERR:NO_MEM\n", 11);
-    return ESP_FAIL;
+  if (err != ESP_OK) {
+    free(ip);
+    return err;
   }
 
-  return ESP_FAIL;
+  free(tcp_client.host_ip);
+  tcp_client.host_ip = ip;
+  tcp_client.host_port = port;
+  return ESP_OK;
 }
+
+//+++++++++++++++++++++++++++++++ flash: WIFI (checksum)
+
+static esp_err_t save_wifi_sum(uint64_t sum) {
+  nvs_handle_t h;
+  esp_err_t err = nvs_open(NVS_NS, NVS_READWRITE, &h);
+  if (err != ESP_OK) {
+    return err;
+  }
+
+  err = nvs_set_u64(h, KEY_WIFI_SUM, sum);
+  if (err == ESP_OK) {
+    err = nvs_commit(h);
+  }
+
+  nvs_close(h);
+  return err;
+}
+
+static uint8_t wifi_cred_valid(void) {
+  // lo que el stack guardo en flash cuando se llamo esp_wifi_set_config
+  wifi_config_t cfg = {0};
+  if (esp_wifi_get_config(WIFI_IF_STA, &cfg) != ESP_OK ||
+      cfg.sta.ssid[0] == '\0') {
+    return FALSE;
+  }
+
+  // ssid (32) y password (64) pueden venir sin '\0' si ocupan todo el
+  // buffer, por eso se copian a arreglos con un byte extra en cero
+  char ssid[sizeof(cfg.sta.ssid) + 1] = {0};
+  char pswd[sizeof(cfg.sta.password) + 1] = {0};
+  memcpy(ssid, cfg.sta.ssid, sizeof(cfg.sta.ssid));
+  memcpy(pswd, cfg.sta.password, sizeof(cfg.sta.password));
+
+  uint64_t actual = checksum(ssid, pswd, eWIFI_CRED_UPDATE);
+
+  // suma que guardamos nosotros al momento de dar las credenciales
+  nvs_handle_t h;
+  uint64_t saved = 0;
+  if (nvs_open(NVS_NS, NVS_READONLY, &h) != ESP_OK) {
+    return FALSE;
+  }
+  esp_err_t err = nvs_get_u64(h, KEY_WIFI_SUM, &saved);
+  nvs_close(h);
+
+  return (err == ESP_OK && saved == actual) ? TRUE : FALSE;
+}
+
+// tareas

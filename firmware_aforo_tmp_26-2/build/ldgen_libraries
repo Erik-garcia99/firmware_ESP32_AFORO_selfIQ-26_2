@@ -195,4 +195,8 @@
 /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/esp-idf/perfmon/libperfmon.a
 /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/esp-idf/rt/librt.a
 /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/esp-idf/spiffs/libspiffs.a
+/home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/esp-idf/espressif__mqtt/libespressif__mqtt.a
+/home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/esp-idf/espressif__mqtt/lib/mqtt_utils/libmqtt_utils_lib.a
+/home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/esp-idf/espressif__mqtt/lib/mqtt_outbox/libmqtt_outbox_lib.a
 /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/esp-idf/main/libmain.a
+/home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/esp-idf/espressif__mqtt/libespressif__mqtt.a

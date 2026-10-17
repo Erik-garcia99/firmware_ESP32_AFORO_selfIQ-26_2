@@ -34725,6 +34725,307 @@
                 "type": "menu"
             },
             {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "If not, this library will use MQTT protocol 3.1",
+                        "id": "MQTT_PROTOCOL_311",
+                        "name": "MQTT_PROTOCOL_311",
+                        "range": null,
+                        "title": "Enable MQTT protocol 3.1.1",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "If not, this library will not support MQTT 5.0",
+                        "id": "MQTT_PROTOCOL_5",
+                        "name": "MQTT_PROTOCOL_5",
+                        "range": null,
+                        "title": "Enable MQTT protocol 5.0",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Enable MQTT transport over SSL with mbedtls",
+                        "id": "MQTT_TRANSPORT_SSL",
+                        "name": "MQTT_TRANSPORT_SSL",
+                        "range": null,
+                        "title": "Enable MQTT over SSL",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_TRANSPORT_WEBSOCKET && MQTT_TRANSPORT_SSL",
+                                "help": "Enable MQTT transport over Websocket Secure.",
+                                "id": "MQTT_TRANSPORT_WEBSOCKET_SECURE",
+                                "name": "MQTT_TRANSPORT_WEBSOCKET_SECURE",
+                                "range": null,
+                                "title": "Enable MQTT over Websocket Secure",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": "WS_TRANSPORT",
+                        "help": "Enable MQTT transport over Websocket.",
+                        "id": "MQTT_TRANSPORT_WEBSOCKET",
+                        "name": "MQTT_TRANSPORT_WEBSOCKET",
+                        "range": null,
+                        "title": "Enable MQTT over Websocket",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Set this to true for the message id (2.3.1 Packet Identifier) to be generated\nas an incremental number rather then a random value (used by default)",
+                        "id": "MQTT_MSG_ID_INCREMENTAL",
+                        "name": "MQTT_MSG_ID_INCREMENTAL",
+                        "range": null,
+                        "title": "Use Incremental Message Id",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Set this to true to avoid publishing (enqueueing messages) if the client is disconnected.\nThe MQTT client tries to publish all messages by default, even in the disconnected state\n(where the qos1 and qos2 packets are stored in the internal outbox to be published later)\nThe MQTT_SKIP_PUBLISH_IF_DISCONNECTED option allows applications to override this behaviour\nand not enqueue publish packets in the disconnected state.",
+                        "id": "MQTT_SKIP_PUBLISH_IF_DISCONNECTED",
+                        "name": "MQTT_SKIP_PUBLISH_IF_DISCONNECTED",
+                        "range": null,
+                        "title": "Skip publish if disconnected",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Set this to true to post events for all messages which were deleted from the outbox\nbefore being correctly sent and confirmed.",
+                        "id": "MQTT_REPORT_DELETED_MESSAGES",
+                        "name": "MQTT_REPORT_DELETED_MESSAGES",
+                        "range": null,
+                        "title": "Report deleted messages",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                                "help": "Default MQTT over TCP port",
+                                "id": "MQTT_TCP_DEFAULT_PORT",
+                                "name": "MQTT_TCP_DEFAULT_PORT",
+                                "range": null,
+                                "title": "Default MQTT over TCP port",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG && MQTT_TRANSPORT_SSL",
+                                "help": "Default MQTT over SSL port",
+                                "id": "MQTT_SSL_DEFAULT_PORT",
+                                "name": "MQTT_SSL_DEFAULT_PORT",
+                                "range": null,
+                                "title": "Default MQTT over SSL port",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG && MQTT_TRANSPORT_WEBSOCKET",
+                                "help": "Default MQTT over Websocket port",
+                                "id": "MQTT_WS_DEFAULT_PORT",
+                                "name": "MQTT_WS_DEFAULT_PORT",
+                                "range": null,
+                                "title": "Default MQTT over Websocket port",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG && MQTT_TRANSPORT_WEBSOCKET && MQTT_TRANSPORT_WEBSOCKET_SECURE",
+                                "help": "Default MQTT over Websocket Secure port",
+                                "id": "MQTT_WSS_DEFAULT_PORT",
+                                "name": "MQTT_WSS_DEFAULT_PORT",
+                                "range": null,
+                                "title": "Default MQTT over Websocket Secure port",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                                "help": "This buffer size using for both transmit and receive",
+                                "id": "MQTT_BUFFER_SIZE",
+                                "name": "MQTT_BUFFER_SIZE",
+                                "range": null,
+                                "title": "Default MQTT Buffer Size",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                                "help": "MQTT task stack size",
+                                "id": "MQTT_TASK_STACK_SIZE",
+                                "name": "MQTT_TASK_STACK_SIZE",
+                                "range": null,
+                                "title": "MQTT task stack size",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                                "help": "Default config employs API locks to protect internal structures. It is possible to disable\nthese locks if the user code doesn't access MQTT API from multiple concurrent tasks",
+                                "id": "MQTT_DISABLE_API_LOCKS",
+                                "name": "MQTT_DISABLE_API_LOCKS",
+                                "range": null,
+                                "title": "Disable API locks",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                                "help": "MQTT task priority. Higher number denotes higher priority.",
+                                "id": "MQTT_TASK_PRIORITY",
+                                "name": "MQTT_TASK_PRIORITY",
+                                "range": null,
+                                "title": "MQTT task priority",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                                "help": "Timeout when polling underlying transport for read.",
+                                "id": "MQTT_POLL_READ_TIMEOUT_MS",
+                                "name": "MQTT_POLL_READ_TIMEOUT_MS",
+                                "range": null,
+                                "title": "MQTT transport poll read timeut",
+                                "type": "int"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                                "help": "A value higher than 1 enables multiple queued events.",
+                                "id": "MQTT_EVENT_QUEUE_SIZE",
+                                "name": "MQTT_EVENT_QUEUE_SIZE",
+                                "range": null,
+                                "title": "Number of queued events.",
+                                "type": "int"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": "Custom MQTT configurations.",
+                        "id": "MQTT_USE_CUSTOM_CONFIG",
+                        "name": "MQTT_USE_CUSTOM_CONFIG",
+                        "range": null,
+                        "title": "MQTT Using custom configurations",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [
+                                    {
+                                        "children": [],
+                                        "depends_on": "<choice MQTT_TASK_CORE_SELECTION>",
+                                        "help": null,
+                                        "id": "MQTT_USE_CORE_0",
+                                        "name": "MQTT_USE_CORE_0",
+                                        "range": null,
+                                        "title": "Core 0",
+                                        "type": "bool"
+                                    },
+                                    {
+                                        "children": [],
+                                        "depends_on": "<choice MQTT_TASK_CORE_SELECTION>",
+                                        "help": null,
+                                        "id": "MQTT_USE_CORE_1",
+                                        "name": "MQTT_USE_CORE_1",
+                                        "range": null,
+                                        "title": "Core 1",
+                                        "type": "bool"
+                                    }
+                                ],
+                                "depends_on": "MQTT_TASK_CORE_SELECTION_ENABLED",
+                                "help": null,
+                                "id": "component-config-esp-mqtt-configurations-enable-mqtt-task-core-selection-core-to-use--home-dmrx-Documents-proyecto_carrera-firmware_ESP32-AFORO_SelfIQ-26-2-firmware_aforo_tmp_26-2-managed_components-espressif__mqtt-Kconfig-146",
+                                "name": "MQTT_TASK_CORE_SELECTION",
+                                "title": "Core to use ?",
+                                "type": "choice"
+                            }
+                        ],
+                        "depends_on": null,
+                        "help": "This will enable core selection",
+                        "id": "MQTT_TASK_CORE_SELECTION_ENABLED",
+                        "name": "MQTT_TASK_CORE_SELECTION_ENABLED",
+                        "range": null,
+                        "title": "Enable MQTT task core selection",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                        "help": "Set to true to use external memory for outbox data.",
+                        "id": "MQTT_OUTBOX_DATA_ON_EXTERNAL_MEMORY",
+                        "name": "MQTT_OUTBOX_DATA_ON_EXTERNAL_MEMORY",
+                        "range": null,
+                        "title": "Use external memory for outbox data",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "SPIRAM",
+                        "help": "Set to true to allocate the client input and output buffers (see buffer.size and\nbuffer.out_size in the client configuration) in external memory.",
+                        "id": "MQTT_BUFFERS_ON_EXTERNAL_MEMORY",
+                        "name": "MQTT_BUFFERS_ON_EXTERNAL_MEMORY",
+                        "range": null,
+                        "title": "Use external memory for the client buffers",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "SPIRAM && (FREERTOS_TASK_CREATE_ALLOW_EXT_MEM || SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY)",
+                        "help": "Set to true to allocate the MQTT task stack in external memory. The task control block\nis always kept in internal memory.\n\nExternal memory is inaccessible while the flash cache is disabled, so with this option\nthe MQTT task must not run any code that disables the cache. In particular, flash and\nNVS operations, and entering deep or light sleep, are not allowed from the MQTT task\ncontext. This includes user code running in an event handler dispatched by the MQTT\ntask.",
+                        "id": "MQTT_TASK_STACK_ON_EXTERNAL_MEMORY",
+                        "name": "MQTT_TASK_STACK_ON_EXTERNAL_MEMORY",
+                        "range": null,
+                        "title": "Use external memory for the MQTT task stack",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": "Set to true if a specific implementation of message outbox is needed (e.g. persistent outbox in NVM or\nsimilar).\nNote: Implementation of the custom outbox must be added to the mqtt component. These CMake commands\ncould be used to append the custom implementation to lib-mqtt sources:\nidf_component_get_property(mqtt mqtt COMPONENT_LIB)\nset_property(TARGET ${mqtt} PROPERTY SOURCES ${PROJECT_DIR}/custom_outbox.c APPEND)",
+                        "id": "MQTT_CUSTOM_OUTBOX",
+                        "name": "MQTT_CUSTOM_OUTBOX",
+                        "range": null,
+                        "title": "Enable custom outbox implementation",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                        "help": "Messages which stays in the outbox longer than this value before being published will be discarded.",
+                        "id": "MQTT_OUTBOX_EXPIRED_TIMEOUT_MS",
+                        "name": "MQTT_OUTBOX_EXPIRED_TIMEOUT_MS",
+                        "range": null,
+                        "title": "Outbox message expired timeout[ms]",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MQTT_USE_CUSTOM_CONFIG",
+                        "help": "Set to true to have publish topic in all data events. This changes the behaviour\nwhen  the message is bigger than the receive buffer size. The first event of the sequence\nalways have the topic.\nNote: This will allocate memory to store the topic only in case of message bigger than the buffer size.",
+                        "id": "MQTT_TOPIC_PRESENT_ALL_DATA_EVENTS",
+                        "name": "MQTT_TOPIC_PRESENT_ALL_DATA_EVENTS",
+                        "range": null,
+                        "title": "Enable publish topic in all data events",
+                        "type": "bool"
+                    }
+                ],
+                "depends_on": null,
+                "id": "component-config-esp-mqtt-configurations-home-dmrx-Documents-proyecto_carrera-firmware_ESP32-AFORO_SelfIQ-26-2-firmware_aforo_tmp_26-2-managed_components-espressif__mqtt-Kconfig-1",
+                "title": "ESP-MQTT Configurations",
+                "type": "menu"
+            },
+            {
                 "children": [],
                 "depends_on": "\"${IDF_BUILD_V2}\"",
                 "id": "component-config-configuration-for-components-not-included-in-the-build-opt-esp-idf-Kconfig-744",

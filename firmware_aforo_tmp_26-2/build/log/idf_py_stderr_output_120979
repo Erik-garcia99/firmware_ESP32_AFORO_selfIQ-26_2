@@ -1,0 +1,10 @@
+Command: ninja flash
+
+A fatal error occurred: No serial data received.
+[31mCMake Error at /opt/esp-idf/components/esptool_py/run_serial_tool.cmake:67 (message):
+  
+  /home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python;-m;esptool;--chip;esp32
+  failed.
+
+
+[0m

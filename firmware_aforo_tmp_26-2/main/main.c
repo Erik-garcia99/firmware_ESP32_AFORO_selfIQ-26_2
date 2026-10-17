@@ -14,6 +14,7 @@
 #include "freertos/task.h"
 #include "global.h"
 #include "modules/TCP/tcp_lib.h"
+#include "modules/MQTT/mqtt_lib.h"
 #include "modules/WIFI/wifi_lib.h"
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -41,6 +42,7 @@ TYPE_FORMAT_REQUEST_T format_request = {0};
 //+++++++++++++++++++++++++++ variables
 uint8_t g_wifi_type = eWifiDefault;
 static const char *TAG = "MAIN_AFORO";
+static selfiq_broker_t mqtt_broker;
 
 //+++++++++++++++++++++++++ funciones
 esp_err_t nvs_load_str(const char *key, char *buf, size_t len);
@@ -93,96 +95,177 @@ static esp_err_t setup_tcp(void) {
   return e;
 }
 
+/* WiFi y MQTT son etapas independientes. El snapshot conserva la red final
+ * incluso si falla NVS o si temporalmente se consulta el TCP del AP. */
+static selfiq_credentials_t verified_wifi;
+
+static void remember_verified_wifi(void) {
+  memset(&verified_wifi, 0, sizeof(verified_wifi));
+  snprintf(verified_wifi.ssid, sizeof(verified_wifi.ssid), "%s", esp_wifi.ssid);
+  snprintf(verified_wifi.password, sizeof(verified_wifi.password), "%s", esp_wifi.pswd);
+  verified_wifi.kind = esp_wifi.type_connected == 1 ? eWifiEnterprise : eWifiDefault;
+  if (verified_wifi.kind == eWifiEnterprise)
+    snprintf(verified_wifi.username, sizeof(verified_wifi.username), "%s", esp_wifi.user_name);
+}
+
+static esp_err_t restore_verified_wifi(void) {
+  return update_setup_cred(verified_wifi.ssid, verified_wifi.password,
+      verified_wifi.kind == eWifiEnterprise ? verified_wifi.username : NULL,
+      verified_wifi.kind == eWifiEnterprise ? "SETUP_ENTERPRISE_WIFI" : "SETUP_WIFI");
+}
+
+/* Al cambiar de red no reutilizar un broker antiguo de otra instalacion.
+ * Se preserva node_id: borrar el destino no cambia la identidad del nodo. */
+static esp_err_t invalidate_saved_broker(void) {
+  nvs_handle_t handle;
+  esp_err_t err = nvs_open("selfiq_mqtt", NVS_READWRITE, &handle);
+  if (err != ESP_OK) return err;
+  const char *keys[] = {"broker_ip", "broker_port"};
+  for (unsigned i = 0; i < 2 && err == ESP_OK; ++i) {
+    err = nvs_erase_key(handle, keys[i]);
+    if (err == ESP_ERR_NVS_NOT_FOUND) err = ESP_OK;
+  }
+  if (err == ESP_OK) err = nvs_commit(handle);
+  nvs_close(handle);
+  return err;
+}
+
+/* Se llama SOLO tras confirmar WiFi definitivo e IP. Por ahora el unico
+ * servidor de descubrimiento conocido esta en el AP de configuracion.
+ * No solicita ni vuelve a guardar credenciales WiFi durante esta consulta. */
+static esp_err_t request_broker_after_wifi(bool *final_connected) {
+  *final_connected = false;
+  ESP_LOGI(TAG, "ETAPA BROKER: Wi-Fi definitivo ya confirmado; consulta TCP separada");
+  selfiq_tcp_close();
+  esp_err_t err = update_setup_cred(SELFIQ_SETUP_SSID, SELFIQ_SETUP_PASSWORD,
+                                    NULL, "SETUP_WIFI");
+  selfiq_broker_t candidate = {0};
+  if (err == ESP_OK && !connect_current("AP SOLO PARA CONSULTAR BROKER"))
+    err = ESP_FAIL;
+  if (err == ESP_OK) err = update_tcp_config(RPI_IP_SETUP, RPI_PORT_SETUP);
+  if (err == ESP_OK) err = tcp_cliente_init();
+  if (err == ESP_OK) err = tcp_request_broker(&candidate);
+  selfiq_tcp_close();
+  /* Restaurar siempre, incluso tras NACK, timeout o AP ausente. */
+  esp_err_t restore = restore_verified_wifi();
+  if (restore != ESP_OK) {
+    ESP_LOGE(TAG, "No se pudo restaurar Wi-Fi en RAM: %s", esp_err_to_name(restore));
+    return restore;
+  }
+  *final_connected = connect_current("REGRESO A RED DEFINITIVA VERIFICADA");
+  if (err != ESP_OK) {
+    ESP_LOGW(TAG, "Broker pendiente: %s. Wi-Fi se conserva; no se piden credenciales otra vez",
+             esp_err_to_name(err));
+    return err;
+  }
+  if (!*final_connected) return ESP_ERR_INVALID_STATE;
+  err = update_mqtt_config(candidate.ip, candidate.port);
+  if (err != ESP_OK) return err;
+  mqtt_broker = candidate;
+  err = mqtt_save_broker();
+  if (err != ESP_OK)
+    ESP_LOGW(TAG, "Broker valido en RAM, pero no se guardo en NVS: %s", esp_err_to_name(err));
+  return ESP_OK;
+}
+
 void app_main(void) {
-  ESP_LOGI(TAG,
-           "SelfIQ provisioning diagnostico v2: inicio (passwords ocultos)");
+  ESP_LOGI(TAG, "SelfIQ: primero Wi-Fi definitivo e IP; despues broker/MQTT");
   s_wifi_event_group = xEventGroupCreate();
   g_tcp_event_group = xEventGroupCreate();
   if (!s_wifi_event_group || !g_tcp_event_group) {
-    ESP_LOGE(TAG, "Sin memoria para grupos de eventos; no puede iniciarse");
+    ESP_LOGE(TAG, "Sin memoria para grupos de eventos");
     return;
   }
   esp_err_t e = nvs_flash_init();
   if (e == ESP_ERR_NVS_NO_FREE_PAGES || e == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-    ESP_LOGW(TAG, "NVS necesita reinicializacion: %s; se borrara NVS",
-             esp_err_to_name(e));
+    ESP_LOGW(TAG, "NVS incompatible/llena; se reinicializara");
     e = nvs_flash_erase();
-    if (e == ESP_OK)
-      e = nvs_flash_init();
+    if (e == ESP_OK) e = nvs_flash_init();
   }
   if (e != ESP_OK) {
     ESP_LOGE(TAG, "No pudo iniciar NVS: %s", esp_err_to_name(e));
     return;
   }
 
-  ESP_LOGI(TAG, "PASO 1: buscando credenciales guardadas en NVS");
-  e = load_wifi_credentials();
   bool connected = false;
-  if (e == ESP_OK) {
-    ESP_LOGI(TAG, "NVS contiene red SSID=\"%s\"; se probara antes del AP",
-             esp_wifi.ssid);
+  if (load_wifi_credentials() == ESP_OK) {
     connected = connect_current("RED GUARDADA");
-    if (!connected)
-      ESP_LOGW(TAG, "Red guardada no conecta; entrando a aprovisionamiento "
-                    "(NVS se conserva)");
-  } else {
-    ESP_LOGW(TAG, "Sin credenciales NVS completas/utilizables: %s (0x%x)",
-             esp_err_to_name(e), (unsigned)e);
+    if (connected) remember_verified_wifi();
   }
+  bool broker_ready = mqtt_load_broker(&mqtt_broker) == ESP_OK;
+  if (!broker_ready)
+    ESP_LOGW(TAG, "Sin broker guardado; esto no invalida las credenciales Wi-Fi");
 
   unsigned cycle = 0;
   while (1) {
     if (connected && esp_wifi.connected) {
-      ESP_LOGI(TAG,
-               "LISTO: ESP32 conectada a red definitiva SSID=\"%s\". TCP de "
-               "setup cerrado",
-               esp_wifi.ssid);
-      /* Current uploaded firmware starts no DHT/MQTT tasks. Add your sensor
-       * task startup here once, if required by the rest of the project. */
-      while (esp_wifi.connected)
+      ESP_LOGI(TAG, "WIFI LISTO: red definitiva e IP confirmadas SSID=\"%s\"", esp_wifi.ssid);
+      bool mqtt_started = false;
+      bool broker_attempted = false;
+      TickType_t last_broker_attempt = 0;
+      while (connected && esp_wifi.connected) {
+        TickType_t now = xTaskGetTickCount();
+        if (!broker_ready && (!broker_attempted ||
+            (TickType_t)(now - last_broker_attempt) >= pdMS_TO_TICKS(60000))) {
+          e = request_broker_after_wifi(&connected);
+          broker_ready = e == ESP_OK;
+          broker_attempted = true;
+          last_broker_attempt = xTaskGetTickCount();
+          if (!connected) break;
+          if (!broker_ready)
+            ESP_LOGW(TAG, "Wi-Fi listo, MQTT pendiente. Reintento SOLO de broker en 60 s");
+        }
+        if (broker_ready && !mqtt_started) {
+          e = mqtt_init(s_wifi_event_group, mqtt_broker.ip);
+          mqtt_started = e == ESP_OK;
+          if (!mqtt_started) {
+            ESP_LOGW(TAG, "MQTT no inicio: %s; Wi-Fi sigue valido", esp_err_to_name(e));
+            vTaskDelay(pdMS_TO_TICKS(5000));
+          }
+        }
         vTaskDelay(pdMS_TO_TICKS(1000));
-      ESP_LOGW(TAG, "Se perdio la red definitiva; reintentando la misma red");
+      }
+      e = mqtt_stop();
+      if (e != ESP_OK) {
+        ESP_LOGE(TAG, "No pudo detenerse MQTT: %s", esp_err_to_name(e));
+        return;
+      }
+      /* Si falla la RAM, no intentar conectar al AP como si fuera red final. */
+      e = restore_verified_wifi();
+      if (e != ESP_OK) {
+        ESP_LOGE(TAG, "Restaurar red definitiva fallo: %s", esp_err_to_name(e));
+        return;
+      }
       connected = connect_current("RECONEXION RED DEFINITIVA");
-      if (connected)
-        continue;
-      ESP_LOGW(TAG, "No recupero la red definitiva; buscara SelfIQ-Admi");
+      if (connected) continue;
+      ESP_LOGW(TAG, "La red definitiva no responde; se solicitara Wi-Fi al AP");
     }
+
     connected = false;
     ++cycle;
-    ESP_LOGI(TAG, "=== CICLO DE APROVISIONAMIENTO %u ===", cycle);
-    ESP_LOGI(TAG, "PASO 2: configurar y conectar AP Raspberry SSID=\"%s\"",
-             SELFIQ_SETUP_SSID);
+    ESP_LOGI(TAG, "=== APROVISIONAMIENTO WIFI %u ===", cycle);
     selfiq_tcp_close();
-    e = update_setup_cred(SELFIQ_SETUP_SSID, SELFIQ_SETUP_PASSWORD, NULL,
-                          "SETUP_WIFI");
-    if (e != ESP_OK) {
-      ESP_LOGE(TAG, "Configurar AP en RAM fallo: %s", esp_err_to_name(e));
-    } else if (connect_current("AP RASPBERRY")) {
-      e = setup_tcp();
+    e = update_setup_cred(SELFIQ_SETUP_SSID, SELFIQ_SETUP_PASSWORD, NULL, "SETUP_WIFI");
+    if (e == ESP_OK && connect_current("AP RASPBERRY PARA WIFI")) {
+      e = setup_tcp(); /* Solo recibir/aplicar WiFi. No consulta el broker. */
       if (e == ESP_OK) {
-        ESP_LOGI(
-            TAG,
-            "PASO 6: dejando AP y conectando red definitiva de la Raspberry");
-        connected = connect_current("RED DEFINITIVA");
+        connected = connect_current("CONFIRMAR RED DEFINITIVA ANTES DEL BROKER");
         if (connected) {
-          ESP_LOGI(TAG, "PASO 7: guardando credenciales verificadas en NVS");
-          e = save_wifi_credentials();
+          remember_verified_wifi();
+          broker_ready = false;
+          /* Antes de persistir una red nueva, quitar el destino de la anterior. */
+          e = invalidate_saved_broker();
+          if (e == ESP_OK) e = save_wifi_credentials();
           if (e == ESP_OK)
-            ESP_LOGI(TAG,
-                     "NVS guardada. Proximo arranque usara la red definitiva");
+            ESP_LOGI(TAG, "WIFI CONFIRMADO Y GUARDADO EN NVS. Ahora puede iniciar etapa broker");
           else
-            ESP_LOGE(TAG,
-                     "Wi-Fi conectado pero NVS no se guardo: %s; al reiniciar "
-                     "requerira nueva configuracion",
-                     esp_err_to_name(e));
+            ESP_LOGW(TAG, "Wi-Fi confirmado en RAM; NVS no actualizada: %s", esp_err_to_name(e));
           continue;
         }
-        ESP_LOGW(TAG, "Credenciales recibidas no lograron conectar; no se "
-                      "guardan en NVS");
+        ESP_LOGW(TAG, "La nueva red no conecto: no se reemplazan credenciales NVS");
       }
     }
-    ESP_LOGW(TAG, "Ciclo no completado. Reintento en 5 segundos; si AP no "
-                  "existe, reabrirlo desde Raspberry");
+    ESP_LOGW(TAG, "Wi-Fi no completado; reintento de aprovisionamiento en 5 s");
     vTaskDelay(pdMS_TO_TICKS(5000));
   }
 }

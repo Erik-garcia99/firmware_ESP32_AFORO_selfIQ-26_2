@@ -1,0 +1,631 @@
+Command: /home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python /opt/esp-idf/tools/idf_monitor.py -p /dev/ttyUSB0 -b 115200 --toolchain-prefix xtensa-esp32-elf- --target esp32 --revision 0 /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/firmware_aforo_tmp_26-2.elf /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/bootloader/bootloader.elf -m '/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python' '/opt/esp-idf/tools/idf.py' '-p' '/dev/ttyUSB0'
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0040,len:6272
+load:0x40078000,len:15820
+load:0x40080400,len:3920
+entry 0x40080644
+[0;32mI (27) boot: ESP-IDF v6.0.2 2nd stage bootloader[0m
+[0;32mI (27) boot: compile time Oct  1 2026 22:07:03[0m
+[0;32mI (28) boot: Multicore bootloader[0m
+[0;32mI (29) boot: chip revision: v3.1[0m
+[0;32mI (32) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (35) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (39) boot.esp32: SPI Flash Size : 2MB[0m
+[0;32mI (42) boot: Enabling RNG early entropy source...[0m
+[0;32mI (47) boot: Partition Table:[0m
+[0;32mI (49) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (56) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (62) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (69) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (75) boot: End of partition table[0m
+[0;32mI (79) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=21478h (136312) map[0m
+[0;32mI (135) esp_image: segment 1: paddr=000314a0 vaddr=3ffb0000 size=04548h ( 17736) load[0m
+[0;32mI (142) esp_image: segment 2: paddr=000359f0 vaddr=40080000 size=0a628h ( 42536) load[0m
+[0;32mI (160) esp_image: segment 3: paddr=00040020 vaddr=400d0020 size=a9288h (692872) map[0m
+[0;32mI (407) esp_image: segment 4: paddr=000e92b0 vaddr=4008a628 size=0b12ch ( 45356) load[0m
+[0;32mI (426) esp_image: segment 5: paddr=000f43e4 vaddr=50000000 size=00028h (    40) load[0m
+[0;32mI (437) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (437) boot: Disabling RNG early entropy source...[0m
+[0;32mI (447) cpu_start: Multicore app[0m
+[0;32mI (455) cpu_start: GPIO 3 and 1 are used as console UART I/O pins[0m
+[0;32mI (456) cpu_start: Pro cpu start user code[0m
+[0;32mI (456) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (458) app_init: Application information:[0m
+[0;32mI (461) app_init: Project name:     firmware_aforo_tmp_26-2[0m
+[0;32mI (467) app_init: App version:      b8a208d-dirty[0m
+[0;32mI (471) app_init: Compile time:     Oct 13 2026 20:54:59[0m
+[0;32mI (476) app_init: ELF file SHA256:  54a97d5e2...[0m
+[0;32mI (481) app_init: ESP-IDF:          v6.0.2[0m
+[0;32mI (484) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (488) efuse_init: Max chip rev:     v3.99 [0m
+[0;32mI (492) efuse_init: Chip rev:         v3.1[0m
+[0;32mI (496) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (502) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (507) heap_init: At 3FFB9148 len 00026EB8 (155 KiB): DRAM[0m
+[0;32mI (513) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (518) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (524) heap_init: At 40095754 len 0000A8AC (42 KiB): IRAM[0m
+[0;32mI (530) spi_flash: detected chip: generic[0m
+[0;32mI (532) spi_flash: flash io: dio[0m
+[0;33mW (535) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.[0m
+[0;32mI (549) main_task: Started on CPU0[0m
+[0;32mI (549) main_task: Calling app_main()[0m
+[0;32mI (549) MAIN_AFORO: SelfIQ provisioning diagnostico v2: inicio (passwords ocultos)[0m
+[0;32mI (589) MAIN_AFORO: PASO 1: buscando credenciales guardadas en NVS[0m
+[0;32mI (589) MAIN_AFORO: NVS contiene red SSID="INFINITUMF4AF"; se probara antes del AP[0m
+[0;32mI (589) MAIN_AFORO: RED GUARDADA: conectando SSID="INFINITUMF4AF"[0m
+[0;32mI (599) SELFIQ_WIFI: Inicializando TCP/IP, eventos y driver Wi-Fi[0m
+[0;32mI (619) wifi:wifi driver task: 3ffc0c3c, prio:23, stack:6656, core=0[0m
+[0;32mI (629) wifi:wifi firmware version: 00ad238[0m
+[0;32mI (629) wifi:wifi certification version: v7.0[0m
+[0;32mI (629) wifi:config NVS flash: enabled[0m
+[0;32mI (629) wifi:config nano formatting: disabled[0m
+[0;32mI (639) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (639) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (649) wifi:Init management short buffer num: 32[0m
+[0;32mI (649) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (659) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (659) wifi:Init static rx buffer num: 10[0m
+[0;32mI (659) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (669) wifi_init: rx ba win: 6[0m
+[0;32mI (669) wifi_init: accept mbox: 6[0m
+[0;32mI (669) wifi_init: tcpip mbox: 32[0m
+[0;32mI (679) wifi_init: udp mbox: 6[0m
+[0;32mI (679) wifi_init: tcp mbox: 6[0m
+[0;32mI (679) wifi_init: tcp tx win: 5760[0m
+[0;32mI (679) wifi_init: tcp rx win: 5760[0m
+[0;32mI (689) wifi_init: tcp mss: 1440[0m
+[0;32mI (689) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (689) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (699) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (699) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="INFINITUMF4AF"; limite=30000 ms[0m
+[0;32mI (709) phy_init: phy_version 4863,a3a4459,Oct 28 2025,14:30:06[0m
+[0;32mI (789) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (799) wifi:enable tsf[0m
+[0;32mI (799) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (3219) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (3219) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (3229) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (3229) wifi:flush txq[0m
+[0;32mI (3229) wifi:stop sw txq[0m
+[0;32mI (3239) wifi:lmac stop hw txq[0m
+[0;33mW (3239) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (5249) SELFIQ_WIFI: Intento Wi-Fi 2/5 SSID="INFINITUMF4AF"; limite=30000 ms[0m
+[0;32mI (5249) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (5249) wifi:enable tsf[0m
+[0;32mI (5249) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (7669) SELFIQ_WIFI: Desconexion/fallo, intento=2 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (7669) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (7679) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (7689) wifi:flush txq[0m
+[0;32mI (7689) wifi:stop sw txq[0m
+[0;32mI (7689) wifi:lmac stop hw txq[0m
+[0;33mW (7689) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (9699) SELFIQ_WIFI: Intento Wi-Fi 3/5 SSID="INFINITUMF4AF"; limite=30000 ms[0m
+[0;32mI (9699) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (9699) wifi:enable tsf[0m
+[0;32mI (9699) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (12119) SELFIQ_WIFI: Desconexion/fallo, intento=3 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (12119) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (12129) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (12139) wifi:flush txq[0m
+[0;32mI (12139) wifi:stop sw txq[0m
+[0;32mI (12139) wifi:lmac stop hw txq[0m
+[0;33mW (12139) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (14149) SELFIQ_WIFI: Intento Wi-Fi 4/5 SSID="INFINITUMF4AF"; limite=30000 ms[0m
+[0;32mI (14149) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (14149) wifi:enable tsf[0m
+[0;32mI (14149) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (16569) SELFIQ_WIFI: Desconexion/fallo, intento=4 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (16569) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (16579) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (16589) wifi:flush txq[0m
+[0;32mI (16589) wifi:stop sw txq[0m
+[0;32mI (16589) wifi:lmac stop hw txq[0m
+[0;33mW (16589) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (18599) SELFIQ_WIFI: Intento Wi-Fi 5/5 SSID="INFINITUMF4AF"; limite=30000 ms[0m
+[0;32mI (18599) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (18599) wifi:enable tsf[0m
+[0;32mI (18599) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (21019) SELFIQ_WIFI: Desconexion/fallo, intento=5 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (21019) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (21029) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (21039) wifi:flush txq[0m
+[0;32mI (21039) wifi:stop sw txq[0m
+[0;32mI (21039) wifi:lmac stop hw txq[0m
+[1;31mE (21039) SELFIQ_WIFI: Agotados 5 intentos a "INFINITUMF4AF"[0m
+[1;31mE (21049) MAIN_AFORO: RED GUARDADA fallo: ESP_FAIL (0xffffffff)[0m
+[0;33mW (21049) MAIN_AFORO: Red guardada no conecta; entrando a aprovisionamiento (NVS se conserva)[0m
+[0;33mW (21059) MAIN_AFORO: Sin destino MQTT valido en NVS: se solicitara al AP Raspberry[0m
+[0;32mI (21069) MAIN_AFORO: === CICLO DE APROVISIONAMIENTO 1 ===[0m
+[0;32mI (21079) MAIN_AFORO: PASO 2: configurar y conectar AP Raspberry SSID="SelfIQ-Admi"[0m
+[0;32mI (21079) MAIN_AFORO: AP RASPBERRY: conectando SSID="SelfIQ-Admi"[0m
+[0;32mI (21089) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (21099) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (21099) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (21109) wifi:enable tsf[0m
+[0;32mI (21109) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (23529) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (23529) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (23539) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (23549) wifi:flush txq[0m
+[0;32mI (23549) wifi:stop sw txq[0m
+[0;32mI (23549) wifi:lmac stop hw txq[0m
+[0;33mW (23549) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (25559) SELFIQ_WIFI: Intento Wi-Fi 2/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (25559) wifi:mode : sta (00:4b:12:8e:b:88)[0m
+[0;32mI (25559) wifi:enable tsf[0m
+[0;32mI (25559) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (27979) SELFIQ_WIFI: Desconexion/fallo, intento=2 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (27979) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (27989) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (27999) wifi:flush txq[0m
+[0;32mI (27999) wifi:stop sw txq[0m
+[0;32mI (27999) wifi:lmac stop hw txq[0m
+[0;33mW (27999) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (30009) SELFIQ_WIFI: Intento Wi-Fi 3/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (30009) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (30009) wifi:enable tsf[0m
+[0;32mI (30009) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (32429) SELFIQ_WIFI: Desconexion/fallo, intento=3 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (32429) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (32439) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (32449) wifi:flush txq[0m
+[0;32mI (32449) wifi:stop sw txq[0m
+[0;32mI (32449) wifi:lmac stop hw txq[0m
+[0;33mW (32449) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (34459) SELFIQ_WIFI: Intento Wi-Fi 4/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (34459) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (34459) wifi:enable tsf[0m
+[0;32mI (34459) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (36879) SELFIQ_WIFI: Desconexion/fallo, intento=4 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (36879) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (36889) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (36899) wifi:flush txq[0m
+[0;32mI (36899) wifi:stop sw txq[0m
+[0;32mI (36899) wifi:lmac stop hw txq[0m
+[0;33mW (36899) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (38909) SELFIQ_WIFI: Intento Wi-Fi 5/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (38909) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (38909) wifi:enable tsf[0m
+[0;32mI (38909) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (41329) SELFIQ_WIFI: Desconexion/fallo, intento=5 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (41329) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (41339) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (41349) wifi:flush txq[0m
+[0;32mI (41349) wifi:stop sw txq[0m
+[0;32mI (41349) wifi:lmac stop hw txq[0m
+[1;31mE (41349) SELFIQ_WIFI: Agotados 5 intentos a "SelfIQ-Admi"[0m
+[1;31mE (41359) MAIN_AFORO: AP RASPBERRY fallo: ESP_FAIL (0xffffffff)[0m
+[0;33mW (41359) MAIN_AFORO: Ciclo no completado. Reintento en 5 segundos; si AP no existe, reabrirlo desde Raspberry[0m
+[0;32mI (46369) MAIN_AFORO: === CICLO DE APROVISIONAMIENTO 2 ===[0m
+[0;32mI (46369) MAIN_AFORO: PASO 2: configurar y conectar AP Raspberry SSID="SelfIQ-Admi"[0m
+[0;32mI (46369) MAIN_AFORO: AP RASPBERRY: conectando SSID="SelfIQ-Admi"[0m
+[0;32mI (46369) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (46379) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (46389) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (46389) wifi:enable tsf[0m
+[0;32mI (46389) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (46659) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (46659) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (46669) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (46699) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (46719) wifi:connected with SelfIQ-Admi, aid = 1, channel 6, BW20, bssid = 2e:cf:67:b1:8c:ee[0m
+[0;32mI (46719) wifi:security: WPA2-PSK, phy: bgn, rssi: -30, cipher(pairwise:0x3, group:0x3), pmf:0[0m
+[0;32mI (46729) wifi:pm start, type: 1[0m
+
+[0;32mI (46729) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (46739) SELFIQ_WIFI: Asociado al AP, canal=6; esperando DHCP/IP[0m
+[0;32mI (46779) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us[0m
+[0;32mI (46779) wifi:AP's beacon interval = 102400 us, DTIM period = 2[0m
+[0;32mI (51279) esp_netif_handlers: sta ip: 192.168.50.105, mask: 255.255.255.0, gw: 192.168.50.1[0m
+[0;32mI (51279) SELFIQ_WIFI: IP=192.168.50.105 mascara=255.255.255.0 gateway=192.168.50.1[0m
+[0;32mI (51279) SELFIQ_WIFI: Wi-Fi e IP confirmados para "SelfIQ-Admi"[0m
+[0;32mI (51289) MAIN_AFORO: AP RASPBERRY completado[0m
+[0;32mI (51289) MAIN_AFORO: PASO 3: preparando TCP hacia Raspberry 192.168.50.1:5000[0m
+[0;32mI (51299) SELFIQ_TCP: Preparando destino TCP: 192.168.50.1:5000[0m
+[0;32mI (51299) SELFIQ_TCP: Destino TCP listo[0m
+[0;32mI (51309) SELFIQ_TCP: Intento TCP 1/5 -> 192.168.50.1:5000 (limite 8000 ms)[0m
+[0;32mI (51309) SELFIQ_TCP: Socket creado fd=54; iniciando connect()[0m
+[0;32mI (51329) wifi:<ba-add>idx:0 (ifx:0, 2e:cf:67:b1:8c:ee), tid:0, ssn:2, winSize:64[0m
+[0;32mI (51339) SELFIQ_TCP: TCP conectado a 192.168.50.1:5000[0m
+[0;32mI (51339) MAIN_AFORO: PASO 4: solicitando credenciales de red definitiva[0m
+[0;32mI (51339) SELFIQ_TCP: Enviados 5/5 bytes[0m
+[0;32mI (51349) SELFIQ_TCP: Recibidos 3/3 bytes[0m
+[0;32mI (51349) SELFIQ_TCP: Recibidos 2/2 bytes[0m
+[0;32mI (51349) SELFIQ_TCP: Cerrando socket TCP fd=54[0m
+[0;33mW (51359) MAIN_AFORO: Solicitud de credenciales fallo: ESP_ERR_INVALID_STATE (0x103)[0m
+[0;33mW (51359) MAIN_AFORO: Ciclo no completado. Reintento en 5 segundos; si AP no existe, reabrirlo desde Raspberry[0m
+[0;32mI (56369) MAIN_AFORO: === CICLO DE APROVISIONAMIENTO 3 ===[0m
+[0;32mI (56369) MAIN_AFORO: PASO 2: configurar y conectar AP Raspberry SSID="SelfIQ-Admi"[0m
+[0;32mI (56369) MAIN_AFORO: AP RASPBERRY: conectando SSID="SelfIQ-Admi"[0m
+[0;32mI (56369) wifi:state: run -> init (0x0)[0m
+[0;32mI (56379) wifi:pm stop, total sleep time: 7426142 us / 9647003 us[0m
+
+[0;32mI (56379) wifi:<ba-del>idx:0, tid:0[0m
+[0;32mI (56389) SELFIQ_WIFI: Desconexion intencional (cambio/reintento de red), reason=8[0m
+[0;32mI (56389) SELFIQ_WIFI: Iterfaz STA detenida para cambio/reintento[0m
+[0;32mI (56499) wifi:flush txq[0m
+[0;32mI (56499) wifi:stop sw txq[0m
+[0;32mI (56499) wifi:lmac stop hw txq[0m
+[0;32mI (56499) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (56499) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (56509) wifi:mod : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (56509) wifi:enable tsf[0m
+[0;32mI (56519) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (56619) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (56619) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (56619) wifi:state: auth -> init (0x6c0)[0m
+[0;33mW (56629) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=202: Fallo de autenticacion: clave/metodo/politia AP[0m
+[0;33mW (56629) SELFIQ_WIFI: Intento fallido reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;32mI (56639) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (56649) wifi:flush txq[0m
+[0;32mI (56649) wifi:stop sw txq[0m
+[0;32mI (56649) wifi:lmac stop hw txq[0m
+[0;33mW (56659) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (58659) SELFIQ_WIFI: Intento Wi-Fi 2/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (58659) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (58659) wifi:enable tsf[0m
+[0;32mI (58659) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (58749) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (58749) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (58769) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (58799) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (58829) wifi:connected with SelfIQ-Admi, aid = 1, channel 6, BW20, bssid = 2e:cf:67:b1:8c:ee[0m
+[0;32mI (58829) wifi:security: WPA2-PSK, phy: bgn, rssi: -32, cipher(pairwise:0x3, group:0x3), pmf:0[0m
+[0;32mI (58839) wifi:pm start, type: 1[0m
+
+[0;32mI (58839) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (58849) SELFIQ_WIFI: Asociado al AP, canal=6; esperando DHCP/IP[0m
+[0;32mI (58859) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us[0m
+[0;32mI (58859) wifi:AP's beacon interval = 102400 us, DTIM period = 2[0m
+[0;32mI (59889) esp_netif_handlers: sta ip: 192.168.50.105, mask: 255.255.255.0, gw: 192.168.50.1[0m
+[0;32mI (59889) SELFIQ_WIFI: IP=192.168.50.105 mascara=255.255.255.0 gateway=192.168.50.1[0m
+[0;32mI (59889) SELFIQ_WIFI: Wi-Fi e IP confirmados para "SelfIQ-Admi"[0m
+[0;32mI (59899) MAIN_AFORO: AP RASPBERRY completado[0m
+[0;32mI (59899) MAIN_AFORO: PASO 3: preparando TCP hacia Raspberry 192.168.50.1:5000[0m
+[0;32mI (59909) SELFIQ_TCP: Preparando destino TCP: 192.168.50.1:5000[0m
+[0;32mI (59909) SELFIQ_TCP: Destino TCP listo[0m
+[0;32mI (59919) SELFIQ_TCP: Intento TCP 1/5 -> 192.168.50.1:5000 (limite 8000 ms)[0m
+[0;32mI (59929) SELFIQ_TCP: Socket creado fd=54; iniciando connect()[0m
+[0;32mI (59989) wifi:<ba-add>idx:0 (ifx:0, 2e:cf:67:b1:8c:ee), tid:0, ssn:2, winSize:64[0m
+[0;32mI (59999) SELFIQ_TCP: TCP conectado a 192.168.50.1:5000[0m
+[0;32mI (60009) MAIN_AFORO: PASO 4: solicitando credenciales de red definitiva[0m
+[0;32mI (60009) SELFIQ_TCP: Enviados 5/5 bytes[0m
+[0;32mI (60019) SELFIQ_TCP: Recibidos 3/3 bytes[0m
+[0;32mI (60019) SELFIQ_TCP: Recibidos 2/2 bytes[0m
+[0;32mI (60019) SELFIQ_TCP: Cerrando socket TCP fd=54[0m
+[0;33mW (60019) MAIN_AFORO: Solicitud de credenciales fallo: ESP_ERR_INVALID_STATE (0x103)[0m
+[0;33mW (60029) MAIN_AFORO: Ciclo no completado. Reintento en 5 segundos; si AP no existe, reabrirlo desde Raspberry[0m
+[0;32mI (65039) MAIN_AFORO: === CICLO DE APROVISIONAMIENTO 4 ===[0m
+[0;32mI (65039) MAIN_AFORO: PASO 2: configurar y conectar AP Raspberry SSID="SelfIQ-Admi"[0m
+[0;32mI (65039) MAIN_AFORO: AP RASPBERRY: conectando SSID="SelfIQ-Admi"[0m
+[0;32mI (65039) wifi:state: run -> init (0x0)[0m
+[0;32mI (65049) wifi:pm stop, total sleep time: 4733493 us / 6205141 us[0m
+
+[0;32mI (65049) wifi:<ba-del>idx:0, tid:0[0m
+[0;32mI (65059) SELFIQ_WIFI: Desconexion intencional (cambio/reintento de red), reason=8[0m
+[0;32mI (65059) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (65119) wifi:flush txq[0m
+[0;32mI (65119) wifi:stop sw txq[0m
+[0;32mI (65119) wifi:lmac stop hw txq[0m
+[0;32mI (65119) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (65119) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (65129) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (65129) wifi:enable tsf[0m
+[0;32mI (65139) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (65229) wifi:new:<6,0>, ol:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (65229) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (65249) wifi:state: auth -> init (0x6c0)[0m
+[0;33mW (65249) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;33mW (65249) SELFIQ_WIFI: Intento fallido reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;32mI (65259) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (65259) wifi:flush txq[0m
+[0;32mI (65269) wifi:stop sw txq[0m
+[0;32mI (65269) wifi:lmac stop hw txq[0m
+[0;33mW (65269) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (67279) SELFIQ_WIFI: Intento Wi-Fi 2/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (67279) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (67279) wifi:enable tsf[0m
+[0;32mI (67279) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (67299) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (67299) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (67309) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (67339) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (67419) wifi:connected with SelfIQ-Admi, aid = 1, channel 6, BW20, bssid = 2e:cf:67:b1:8c:ee[0m
+[0;32mI (67419) wifi:security: WPA2-PSK, phy: bgn, rssi: -33, cipher(pairwise:0x3, group:0x3), pmf:0[0m
+[0;32mI (67419) wifi:pm start, type: 1[0m
+
+[0;32mI (67429) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (67439) SELFIQ_WIFI: Asociado al AP, canal=6; esperando DHCP/IP[0m
+[0;32mI (67459) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us[0m
+[0;32mI (67469) wifi:AP's beacon interval = 102400 us, DTIM period = 2[0m
+[0;32mI (68459) esp_netif_handlers: sta ip: 192.168.50.105, mask: 255.255.255.0, gw: 192.168.50.1[0m
+[0;32mI (68459) SELFIQ_WIFI: IP=192.168.50.105 mascara=255.255.255.0 gateway=192.168.50.1[0m
+[0;32mI (68459) SELFIQ_WIFI: Wi-Fi e IP confirmados para "SelfIQ-Admi"[0m
+[0;32mI (68469) MAIN_AFORO: AP RASPBERRY completado[0m
+[0;32mI (68469) MAIN_AFORO: PASO 3: preparando TCP hacia Raspberry 192.168.50.1:5000[0m
+[0;32mI (68479) SELFIQ_TCP: Preparando destino TCP: 192.168.50.1:5000[0m
+[0;32mI (68479) SELFIQ_TCP: Destino TCP listo[0m
+[0;32mI (68489) SELFIQ_TCP: Intento TCP 1/5 -> 192.168.50.1:5000 (limite 8000 ms)[0m
+[0;32mI (68489) SELFIQ_TCP: Socket creado fd=54; iniciando connect()[0m
+[0;32mI (68509) wifi:<ba-add>idx:0 (ifx:0, 2e:cf:67:b1:8c:ee), tid:0, ssn:2, winSize:64[0m
+[0;32mI (68519) SELFIQ_TCP: TCP conectado a 192.168.50.1:5000[0m
+[0;32mI (68519) MAIN_AFORO: PASO 4: solicitando credenciales de red definitiva[0m
+[0;32mI (68519) SELFIQ_TCP: Enviados 5/5 bytes[0m
+[0;32mI (68529) SELFIQ_TCP: Recibidos 3/3 bytes[0m
+[0;32mI (68529) SELFIQ_TCP: Recibidos 2/2 bytes[0m
+[0;32mI (68529) SELFIQ_TCP: Cerrando socket TCP fd=54[0m
+[0;33mW (68539) MAIN_AFORO: Solicitud de credenciales fallo: ESP_ERR_INVALID_STATE (0x103)[0m
+[0;33mW (68539) MAIN_AFORO: Ciclo no completado. Reintento en 5 segundos; si AP no existe, reabrirlo desde Raspberry[0m
+[0;32mI (73549) MAIN_AFORO: === CICLO DE APROVISIONAMIENTO 5 ===[0m
+[0;32mI (73549) MAIN_AFORO: PASO 2: configurar y conectar AP Raspberry SSID="SelfIQ-Admi"[0m
+[0;32mI (73549) MAIN_AFORO: AP RASPBERRY: conectando SSID="SelfIQ-Admi"[0m
+[0;32mI (73549) wifi:state: run -> init (0x0)[0m
+[0;32mI (73559) wifi:pm stop, total sleep time: 4878632 us / 6129838 us[0m
+
+[0;32mI (73559) wifi:<ba-del>idx:0, tid:0[0m
+[0;32mI (73569) SELFIQ_WIFI: Desconexion intencional (cambio/reintento de red), reason=8[0m
+[0;32mI (73569) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (73649) wifi:flush txq[0m
+[0;32mI (73649) wifi:stop sw txq[0m
+[0;32mI (73649) wifi:lmac stop hw txq[0m
+[0;32mI (73649) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (73649) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (73659) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (73659) wifi:enable tsf[0m
+[0;32mI (73669) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (73679) wifi:new:<6,0, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (73679) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (73679) wifi:state: auth -> init (0x6c0)[0m
+[0;33mW (73679) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;33mW (73689) SELFIQ_WIFI: Intento fallido reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;32mI (73699) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (73709) wifi:flush txq[0m
+[0;32mI (73709) wifi:stop sw txq[0m
+[0;32mI (73709) wifi:lmac stop hw txq[0m
+[0;33mW (73719) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (75719) SELFIQ_WIFI: Intento Wi-Fi 2/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (75719) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (75719) wifi:enable tf[0m
+[0;32mI (75719) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (75739) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (75739) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (75749) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (75769) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (75799) wifi:connected with SelfIQ-Admi, aid = 1, channel 6, BW20, bssid = 2e:cf:67:b1:8c:ee[0m
+[0;32mI (75799) wifi:security: WPA2-PSK, phy: bgn, rssi: -33, cipher(pairwise:0x3, group:0x3), pmf:0[0m
+[0;32mI (75799) wifi:pm start, type: 1[0m
+
+[0;32mI (75809) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (75819) SELFIQ_WIFI: Asociado al AP, canal=6; esperando DHCP/IP[0m
+[0;32mI (75859) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us[0m
+[0;32mI (75859) wifi:AP's beacon interval = 102400 us, DTIM period = 2[0m
+[0;32mI (76829) esp_netif_handlers: sta ip: 192.168.50.105, mask: 255.255.255.0, gw: 192.168.50.1[0m
+[0;32mI (76829) SELFIQ_WIFI: IP=192.168.50.105 mascara=255.255.255.0 gateway=192.168.50.1[0m
+[0;32mI (76829) SELFIQ_WIFI: Wi-Fi e IP confirmados para "SelfIQ-Admi"[0m
+[0;32mI (76839) MAIN_AFORO: AP RASPBERRY completado[0m
+[0;32mI (76839) MAIN_AFORO: PASO 3: preparando TCP hacia Raspberry 192.168.50.1:5000[0m
+[0;32mI (76849) SELFIQ_TCP: Preparando destino TCP: 192.168.50.1:5000[0m
+[0;32mI (76849) SELFIQ_TCP: Destino TCP listo[0m
+[0;32mI (76859) SELFIQ_TCP: Intento TCP 1/5 -> 192.168.50.1:5000 (limite 8000 ms)[0m
+[0;32mI (76859) SELFIQ_TCP: Socket creado fd=54; iniciando connect()[0m
+[0;32mI (76879) wifi:<ba-add>idx:0 (ifx:0, 2e:cf:67:b1:8c:ee), tid:0, ssn:2, winSize:64[0m
+[0;32mI (76889) SELFIQ_TCP: TCP conectado a 192.168.50.1:5000[0m
+[0;32mI (76889) MAIN_AFORO: PASO 4: solicitando credenciales de red definitiva[0m
+[0;32mI (76899) SELFIQ_TCP: Enviados 5/5 bytes[0m
+[0;32mI (76899) SELFIQ_TCP: Recibidos 3/3 bytes[0m
+[0;32mI (76899) SELFIQ_TCP: Recibidos 2/2 bytes[0m
+[0;32mI (76899) SELFIQ_TCP: Cerrando socket TCP fd=54[0m
+[0;33mW (76909) MAIN_AFORO: Solicitud de credenciales fallo: ESP_ERR_INVALID_STATE (0x103)[0m
+[0;33mW (76909) MAIN_AFORO: Ciclo no completado. Reintento en 5 segundos; si AP no existe, reabrirlo desde Raspberry[0m
+[0;32mI (79759) wifi:state: run -> init (0x3c0)[0m
+[0;32mI (79759) wifi:pm stop, total sleep time: 3274671 us / 3949992 us[0m
+
+[0;32mI (79759) wifi:<ba-del>idx:0, tid:0[0m
+[0;33mW (79759) SELFIQ_WIFI: Desconexion/fallo, intento=2 reason=3: Consulte reason numerico ESP-IDF; no permite asegurar una sola causa[0m
+[0;32mI (81919) MAIN_AFORO: === CICLO DE APROVISIONAMIENTO 6 ===[0m
+[0;32mI (81919) MAIN_AFORO: PASO 2: configurar y conectar AP Raspberry SSID="SelfIQ-Admi"[0m
+[0;32mI (81919) MAIN_AFORO: AP RASPBERRY: conectando SSID="SelfIQ-Admi"[0m
+[0;32mI (81929) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (81929) wifi:flush txq[0m
+[0;32mI (81929) wifi:stop sw txq[0m
+[0;32mI (81929) wifi:lmac stop hw txq[0m
+[0;32mI (81939) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (81939) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (81949) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (81949) wifi:enable tsf[0m
+[0;32mI (81959) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (84379) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (84379) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (84389) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (84389) wifi:flush txq[0m
+[0;32mI (84389) wifi:stop sw txq[0m
+[0;32mI (84399) wifi:lmac stop hw txq[0m
+[0;33mW (84399) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (86409) SELFIQ_WIFI: Intento Wi-Fi 2/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (86409) wifi:mode : sta (00:4b:12:8e:b9:88)[0m[0;32mI (86409) wifi:enable tsf[0m
+[0;32mI (86409) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (88829) SELFIQ_WIFI: Desconexion/fallo, intento=2 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (88829) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (88839) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (88849) wifi:flush txq[0m
+[0;32mI (88849) wifi:stop sw txq[0m
+[0;32mI (88849) wifi:lmac stop hw txq[0m
+[0;33mW (88849) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (90859) SELFIQ_WIFI: Intento Wi-Fi 3/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (90859) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (90859) wifi:enable tsf[0m
+[0;32mI (90859) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (93279) SELFIQ_WIFI: Desconexion/fallo, intento=3 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (93279) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (93289) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (93299) wifi:flush txq[0m
+[0;32mI (93299) wifi:stop sw txq[0m
+[0;32mI (93299) wifi:lmac stop hw txq[0m
+[0;33mW (93299) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (95309) SELFIQ_WIFI: Intento Wi-Fi 4/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (95309) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (95309) wifi:enable tsf[0m
+[0;32mI (95309) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (97729) SELFIQ_WIFI: Desconexion/fallo, intento=4 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (97729) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (97739) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (97749) wifi:flush txq[0m
+[0;32mI (97749) wifi:stop sw txq[0m
+[0;32mI (97749) wifi:lmac stop hw txq[0m
+[0;33mW (97749) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (99759) SELFIQ_WIFI: Intento Wi-Fi 5/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (99759) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (99759) wifi:enable tsf[0m
+[0;32mI (99759) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (102179) SELFIQ_WIFI: Desconexion/fallo, intento=5 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (102179) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (102189) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (102199) wifi:flush txq[0m
+[0;32mI (102199) wifi:stop sw txq[0m
+[0;32mI (102199) wifi:lmac stop hw txq[0m
+[1;31mE (102209) SELFIQ_WIFI: Agotados 5 intentos a "SelfIQ-Admi"[0m
+[1;31mE (102209) MAIN_AFORO: AP RASPBERRY fallo: ESP_FAIL (0xffffffff)[0m
+[0;33mW (102219) MAIN_AFORO: Ciclo no completado. Reintento en 5 segundos; si AP no existe, reabrirlo desde Raspberry[0m
+[0;32mI (107229) MAIN_AFORO: === CICLO DE APROVISIONAMIENTO 7 ===[0m
+[0;32mI (107229) MAIN_AFORO: PASO 2: configurar y conectar AP Raspberry SSID="SelfIQ-Admi"[0m
+[0;32mI (107229) MAIN_AFORO: AP RASPBERRY: conectando SSID="SelfIQ-Admi"[0m
+[0;32mI (107229) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (107239) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (107249) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (107249) wifi:enable tsf[0m
+[0;32mI (107249) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (109679) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (109679) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (109689) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (109689) wifi:flush txq[0m
+[0;32mI (109689) wifi:stop sw txq[0m
+[0;32mI (109699) wifi:lmac stop hw txq[0m
+[0;33mW (109699) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (111699) SELFIQ_WIFI: Intento Wi-Fi 2/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (111699) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (111699) wifi:enable tsf[0m
+[0;32mI (111699) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;33mW (114119) SELFIQ_WIFI: Desconexion/fallo, intento=2 reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;33mW (114119) SELFIQ_WIFI: Intento fallido reason=201: AP no encontrado: SSID, cobertura, AP apagado o canal[0m
+[0;32mI (114129) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (114139) wifi:flush txq[0m
+[0;32mI (114139) wifi:stop sw txq[0m
+[0;32mI (114139) wifi:lmac stop hw txq[0m
+[0;33mW (114149) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (116149) SELFIQ_WIFI: Intento Wi-Fi 3/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (116149) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (116149) wifi:enable tsf[0m
+[0;32mI (116149) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (116169) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (116169) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (116169) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (116189) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (116219) wifi:connected with SelfIQ-Admi, aid = 1, channel 6, BW20, bssid = 2e:cf:67:b1:8c:ee[0m
+[0;32mI (116219) wifi:security: WPA2-PSK, phy: bgn, rssi: -36, cipher(pairwise:0x3, group:0x3), pmf:0[0m
+[0;32mI (116219) wifi:pm start, type: 1[0m
+
+[0;32mI (116229) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (116239) SELFIQ_WIFI: Asociado al AP, canal=6; esperando DHCP/IP[0m
+[0;32mI (116309) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us[0m
+[0;32mI (116309) wifi:AP's beacon interval = 102400 us, DTIM period = 2[0m
+[0;32mI (117729) esp_netif_handlers: sta ip: 192.168.50.105, mask: 255.255.255.0, gw: 192.168.50.1[0m
+[0;32mI (117729) SELFIQ_WIFI: IP=192.168.50.105 mascara=255.255.255.0 gateway=192.168.50.1[0m
+[0;32mI (117729) SELFIQ_WIFI: Wi-Fi e IP confirmados para "SelfIQ-Admi"[0m
+[0;32mI (117739) MAIN_AFORO: AP RASPBERRY completado[0m
+[0;32mI (117739) MAIN_AFORO: PASO 3: preparando TCP hacia Raspberry 192.168.50.1:5000[0m
+[0;32mI (117749) SELFIQ_TCP: Preparando destino TCP: 192.168.50.1:5000[0m
+[0;32mI (117749) SELFIQ_TCP: Destino TCP listo[0m
+[0;32mI (117759) SELFIQ_TCP: Intento TCP 1/5 -> 192.168.50.1:5000 (limite 8000 ms)[0m
+[0;32mI (117759) SELFIQ_TCP: Socket creado fd=54; iniciando connect()[0m
+[0;32mI (117779) wifi:<ba-add>idx:0 (ifx:0, 2e:cf:67:b1:8c:ee), tid:0, ssn:2, winSize:64[0m
+[0;32mI (117799) SELFIQ_TCP: TCP conectado a 192.168.50.1:5000[0m
+[0;32mI (117799) MAIN_AFORO: PASO 4: solicitando credenciales de red definitiva[0m
+[0;32mI (117799) SELFIQ_TCP: Enviados 5/5 bytes[0m
+[0;32mI (117819) SELFIQ_TCP: Recibidos 3/3 bytes[0m
+[0;32mI (117819) SELFIQ_TCP: Recibidos 2/2 bytes[0m
+[0;32mI (117819) SELFIQ_TCP: Cerrando socket TCP fd=54[0m
+[0;33mW (117819) MAIN_AFORO: Solicitud de credenciales fallo: ESP_ERR_INVALID_STATE (0x103)[0m
+[0;33mW (117829) MAIN_AFORO: Ciclo no completado. Reintento en 5 segundos; si AP no existe, reabrirlo desde Raspberry[0m
+[0;32mI (122839) MAIN_AFORO: === CICLO DE APROVISIONAMIENTO 8 ===[0m
+[0;32mI (122839) MAIN_AFORO: PASO 2: configurar y conectar AP Raspberry SSID="SelfIQ-Admi"[0m
+[0;32mI (122839) MAIN_AFORO: AP RASPBERRY: conectando SSID="SelfIQ-Admi"[0m
+[0;32mI (122839) wifi:state: run -> init (0x0)[0m
+[0;32mI (122849) wifi:pm stop, total sleep time: 5208888 us / 6619698 us[0m
+
+[0;32mI (122849) wifi:<ba-del>idx:0, tid:0[0m
+[0;32mI (122859) SELFIQ_WIFI: Desconexion intencional (cambio/reintento de red), reason=8[0m
+[0;32mI (122859) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (122929) wifi:flush txq[0m
+[0;32mI (122929) wifi:stop sw txq[0m
+[0;32mI (122929) wifi:lmac stop hw txq[0m
+[0;32mI (122929) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (122929) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (122939) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (122939) wifi:enable tsf[0m
+[0;32mI (122949) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (122969) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (122979) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (123009) wifi:state: auth -> init (0x6c0)[0m
+[0;33mW (123019) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;33mW (123019) SELFIQ_WIFI: Intento fallido reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;32mI (123029) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (123029) wifi:flush txq[0m
+[0;32mI (123029) wifi:stop sw txq[0m
+[0;32mI (123039) wifi:lmac stop hw txq[0m
+[0;33mW (123039) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (125049) SELFIQ_WIFI: Intento Wi-Fi 2/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (125049) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (125049) wifi:enable tsf[0m
+[0;32mI (125049) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (125119) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (125129) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (125149) wifi:state: auth -> init (0x6c0)[0m
+[0;33mW (125149) SELFIQ_WIFI: Desconexion/fallo, intento=2 reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;33mW (125149) SELFIQ_WIFI: Intento fallido reason=202: Fallo de autenticacion: clave/metodo/politica AP[0m
+[0;32mI (125159) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (125169) wifi:flush txq[0m
+[0;32mI (125169) wifi:stop sw txq[0m
+[0;32mI (125169) wifi:lmac stop hw txq[0m
+[0;33mW (125179) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m
+[0;32mI (127179) SELFIQ_WIFI: Intento Wi-Fi 3/5 SSID="SelfIQ-Admi"; limite=30000 ms[0m
+[0;32mI (127179) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (127179) wifi:enable tsf[0m
+[0;32mI (127179) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (127249) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (127249) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (127259) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (127279) wifi:state: assoc -> run (0x10)[0m
+[0;32mI (127309) wifi:connected with SelfIQ-Admi, aid = 1, channel 6, BW20, bssid = 2e:cf:67:b1:8c:ee[0m
+[0;32mI (127309) wifi:security: WPA2-PSK, phy: bgn, rssi: -37, cipher(pairwise:0x3, group:0x3), pmf:0[0m
+[0;32mI (127319) wifi:pm start, type: 1[0m
+
+[0;32mI (127319) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us[0m
+[0;32mI (127329) SELFIQ_WIFI: Asociado al AP, canal=6; esperando DHCP/IP[0m
+[0;32mI (127379) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us[0m
+[0;32mI (127379) wifi:AP's beacon interval = 102400 us, DTIM period = 2[0m
+[0;32mI (128369) esp_netif_handlers: sta ip: 192.168.50.105, mask: 255.255.255.0, gw: 192.168.50.1[0m
+[0;32mI (128369) SELFIQ_WIFI: IP=192.168.50.105 mascara=255.255.255.0 gateway=192.168.50.1[0m
+[0;32mI (128369) SELFIQ_WIFI: Wi-Fi e IP confirmados para "SelfIQ-Admi"[0m
+[0;32mI (128379) MAIN_AFORO: AP RASPBERRY completado[0m
+[0;32mI (128379) MAIN_AFORO: PASO 3: preparando TCP hacia Raspberry 192.168.50.1:5000[0m
+[0;32mI (128389) SELFIQ_TCP: Preparando destino TCP: 192.168.50.1:5000[0m
+[0;32mI (128389) SELFIQ_TCP: Destino TCP listo[0m
+[0;32mI (128399) SELFIQ_TCP: Intento TCP 1/5 -> 192.168.50.1:5000 (limite 8000 ms)[0m
+[0;32mI (128399) SELFIQ_TCP: Socket creado fd=54; iniciando connect()[0m
+[0;32mI (128429) wifi:<ba-add>idx:0 (ifx:0, 2e:cf:67:b1:8c:ee), tid:0, ssn:2, winSize:64[0m
+[0;32mI (128449) SELFIQ_TCP: TCP conectado a 192.168.50.1:5000[0m
+[0;32mI (128449) MAIN_AFORO: PASO 4: solicitando credenciales de red definitiva[0m
+[0;32mI (128459) SELFIQ_TCP: Enviados 5/5 bytes[0m
+[0;32mI (128469) SELFIQ_TCP: Recibidos 3/3 bytes[0m
+[0;32mI (128469) SELFIQ_TCP: Recibidos 2/2 bytes[0m
+[0;32mI (128469) SELFIQ_TCP: Cerrando socket TCP fd=54[0m
+[0;33mW (128469) MAIN_AFORO: Solicitud de credenciales fallo: ESP_ERR_INVALID_STATE (0x103)[0m
+[0;33mW (128479) MAIN_AFORO: Ciclo no completado. Reintento en 5 segundos; si AP no existe, reabrirlo desde Raspberry[0m
+pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p pp|� p p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��p�p|�|���p�pp��� p pp�p|p�p�p�p�pp�p p�|p�pppp��p��pp�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p���p�ppppp|p p p�|p�pppp��p��p�p|�|��p�����|p p p pp�ppppp�p���p��������p��p�ppp|������ �pp�� pp|||�p� �� �|p ��p|p�p�p�ppppp�p���p��������p��p�pp�������|�|���p�|�|���� |�|�|� pp|���|���|�p�pp��� ���|�|�p�pp�p�pp � p|�| p||�|�|���� ��|pppp�p�p� p��|p�������  p � p � ��� ��| p| p�� ||� p ��p|p�p�p�ppppp�p���p��������p��p�ppp|���|���| p�� |�||���| p��� ���|�|�p�pp�p�pp � p|�| p||�|�|���� ��|pppp�p�p� p��|p�������  p � p � ��� ��| p| p�� ||� p p p|p�p�p�ppppp�p���p��������p��p�ppp|������ �pp�� p����||��� p� �� p�� �|��p�|�p��p|���|���|� p p p|p�p�p�pppp��p��p�p�|����| p����|p p p|p�p�p�pppp��p��p�p���| p���p����|p p p|p�p�p�pppp��p��p�p|�|��p���| p|��p����|p ��p|p�p|ppppp�p���p��������p��p�ppp�p�����p�|���pp|���|���| p��p�|p��pp| p�pp������|���||

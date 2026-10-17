@@ -1,0 +1,101 @@
+Command: /home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python /opt/esp-idf/tools/idf_monitor.py -p /dev/ttyUSB0 -b 115200 --toolchain-prefix xtensa-esp32-elf- --target esp32 --revision 0 /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/firmware_aforo_tmp_26-2.elf /home/dmrx/Documents/proyecto_carrera/firmware_ESP32-AFORO_SelfIQ-26-2/firmware_aforo_tmp_26-2/build/bootloader/bootloader.elf -m '/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python' '/opt/esp-idf/tools/idf.py' '-p' '/dev/ttyUSB0'
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0040,len:6272
+load:0x40078000,len:15820
+load:0x40080400,len:3920
+entry 0x40080644
+[0;32mI (27) boot: ESP-IDF v6.0.2 2nd stage bootloader[0m
+[0;32mI (27) boot: compile time Oct  1 2026 22:07:03[0m
+[0;32mI (27) boot: Multicore bootloader[0m
+[0;32mI (29) boot: chip revision: v3.1[0m
+[0;32mI (32) boot.esp32: SPI Speed      : 40MHz[0m
+[0;32mI (35) boot.esp32: SPI Mode       : DIO[0m
+[0;32mI (39) boot.esp32: SPI Flash Size : 2MB[0m
+[0;32mI (42) boot: Enabling RNG early entropy source...[0m
+[0;32mI (47) boot: Partition Table:[0m
+[0;32mI (49) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (56) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (62) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (69) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (75) boot: End of partition table[0m
+[0;32mI (79) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=21478h (136312) map[0m
+[0;32mI (135) esp_image: segment 1: paddr=000314a0 vaddr=3ffb0000 size=04548h ( 17736) load[0m
+[0;32mI (142) esp_image: segment 2: paddr=000359f0 vaddr=40080000 size=0a628h ( 42536) load[0m
+[0;32mI (160) esp_image: segment 3: paddr=00040020 vaddr=400d0020 size=a9288h (692872) map[0m
+[0;32mI (407) esp_image: segment 4: paddr=000e92b0 vaddr=4008a628 size=0b12ch ( 45356) load[0m
+[0;32mI (426) esp_image: segment 5: paddr=000f43e4 vaddr=50000000 size=00028h (    40) load[0m
+[0;32mI (437) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (437) boot: Disabling RNG early entropy source...[0m
+[0;32mI (447) cpu_start: Multicore app[0m
+[0;32mI (455) cpu_start: GPIO 3 and 1 are used as console UART I/O pins[0m
+[0;32mI (456) cpu_start: Pro cpu start user code[0m
+[0;32mI (456) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (458) app_init: Application information:[0m
+[0;32mI (461) app_init: Project name:     firmware_aforo_tmp_26-2[0m
+[0;32mI (467) app_init: App version:      b8a208d-dirty[0m
+[0;32mI (471) app_init: Compile time:     Oct 13 2026 20:54:59[0m
+[0;32mI (476) app_init: ELF file SHA256:  54a97d5e2...[0m
+[0;32mI (481) app_init: ESP-IDF:          v6.0.2[0m
+[0;32mI (484) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (488) efuse_init: Max chip rev:     v3.99 [0m
+[0;32mI (492) efuse_init: Chip rev:         v3.1[0m
+[0;32mI (496) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (502) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (507) heap_init: At 3FFB9148 len 00026EB8 (155 KiB): DRAM[0m
+[0;32mI (513) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+[0;32mI (518) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (524) heap_init: At 40095754 len 0000A8AC (42 KiB): IRAM[0m
+[0;32mI (530) spi_flash: detected chip: generic[0m
+[0;32mI (532) spi_flash: flash io: dio[0m
+[0;33mW (535) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.[0m
+[0;32mI (549) main_task: Started on CPU0[0m
+[0;32mI (549) main_task: Calling app_main()[0m
+[0;32mI (549) MAIN_AFORO: SelfIQ provisioning diagnostico v2: inicio (passwords ocultos)[0m
+[0;32mI (589) MAIN_AFORO: PASO 1: buscando credenciales guardadas en NVS[0m
+[0;32mI (589) MAIN_AFORO: NVS contiene red SSID="INFINITUMF4AF"; se probara antes del AP[0m
+[0;32mI (589) MAIN_AFORO: RED GUARDADA: conectando SSID="INFINITUMF4AF"[0m
+[0;32mI (599) SELFIQ_WIFI: Inicializando TCP/IP, eventos y driver Wi-Fi[0m
+[0;32mI (619) wifi:wifi driver task: 3ffc0c3c, prio:23, stack:6656, core=0[0m
+[0;32mI (629) wifi:wifi firmware version: 00ad238[0m
+[0;32mI (629) wifi:wifi certification version: v7.0[0m
+[0;32mI (629) wifi:config NVS flash: enabled[0m
+[0;32mI (629) wifi:config nano formatting: disabled[0m
+[0;32mI (639) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (639) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (649) wifi:Init management short buffer num: 32[0m
+[0;32mI (649) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (659) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (659) wifi:Init static rx buffer num: 10[0m
+[0;32mI (659) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (669) wifi_init: rx ba win: 6[0m
+[0;32mI (669) wifi_init: accept mbox: 6[0m
+[0;32mI (669) wifi_init: tcpip mbox: 32[0m
+[0;32mI (679) wifi_init: udp mbox: 6[0m
+[0;32mI (679) wifi_init: tcp mbox: 6[0m
+[0;32mI (679) wifi_init: tcp tx win: 5760[0m
+[0;32mI (679) wifi_init: tcp rx win: 5760[0m
+[0;32mI (689) wifi_init: tcp mss: 1440[0m
+[0;32mI (689) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (689) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (699) SELFIQ_WIFI: Configurando WPA2 Personal (password oculto)[0m
+[0;32mI (699) SELFIQ_WIFI: Intento Wi-Fi 1/5 SSID="INFINITUMF4AF"; limite=30000 ms[0m
+[0;32mI (709) phy_init: phy_version 4863,a3a4459,Oct 28 2025,14:30:06[0m
+[0;32mI (789) wifi:mode : sta (00:4b:12:8e:b9:88)[0m
+[0;32mI (789) wifi:enable tsf[0m
+[0;32mI (799) SELFIQ_WIFI: Interfaz STA iniciada[0m
+[0;32mI (809) wifi:new:<6,0>, old:<1,0>, ap:<255,255>, sta:<6,0>, prof:1, snd_ch_cfg:0x0[0m
+[0;32mI (809) wifi:state: init -> auth (0xb0)[0m
+[0;32mI (819) wifi:state: auth -> assoc (0x0)[0m
+[0;32mI (819) wifi:state: assoc -> init (0x2a0)[0m
+[0;33mW (819) SELFIQ_WIFI: Desconexion/fallo, intento=1 reason=203: AP rechazo asociacion[0m
+[0;33mW (829) SELFIQ_WIFI: Intento fallido reason=203: AP rechazo asociacion[0m
+[0;32mI (839) SELFIQ_WIFI: Interfaz STA detenida para cambio/reintento[0m
+[0;32mI (839) wifi:flush txq[0m
+[0;32mI (839) wifi:stop sw txq[0m
+[0;32mI (839) wifi:lmac stop hw txq[0m
+[0;33mW (849) SELFIQ_WIFI: Siguiente intento Wi-Fi en 2 segundos[0m

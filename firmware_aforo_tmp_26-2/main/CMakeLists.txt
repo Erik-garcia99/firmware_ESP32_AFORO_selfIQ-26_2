@@ -2,7 +2,7 @@ idf_component_register(
             SRCS 
             "main.c" 
             "modules/WIFI/wifi_lib.c"
-            "modules/MQTT/mqtt_lib.h"
+            "modules/MQTT/mqtt_lib.c"
             "modules/DHT11/dht11_lib.c"
             "modules/TCP/tcp_lib.c"
                     

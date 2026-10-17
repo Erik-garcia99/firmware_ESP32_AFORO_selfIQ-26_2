@@ -1,5 +1,4 @@
 #include "tcp_lib.h"
-#include "cc.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/task.h"
@@ -225,114 +224,143 @@ static esp_err_t transfer(uint8_t *buffer, size_t count, bool writing,
     return ESP_OK;
 }
 
-esp_err_t send_message(void) {
-  if (tcp_client.sock < 0 || !tcp_client.connected) {
 
+/* Framing reutilizable. transfer() completa send/recv parciales bajo un plazo. */
+esp_err_t tcp_send_frame(const TYPE_FORMAT_REQUEST_T *frame) {
+  if (!frame || frame->len < 1 ||
+      (frame->len != 255 && frame->len > MAX_DATA + 1))
+    return ESP_ERR_INVALID_ARG;
+  if (tcp_client.sock < 0 || !tcp_client.connected)
     return ESP_ERR_INVALID_STATE;
+  uint8_t bytes[MAX_DATA + 4];
+  bytes[0] = frame->header >> 8;
+  bytes[1] = frame->header & 255;
+  bytes[2] = frame->len;
+  size_t size;
+  if (frame->len == 255) {
+    /* Excepcion heredada del protocolo: FF FF 00 (no 255 bytes). */
+    if (frame->header != ACK || frame->type_frame != eRespNACK)
+      return ESP_ERR_INVALID_ARG;
+    bytes[3] = 255;
+    bytes[4] = 0;
+    size = 5;
+  } else {
+    bytes[3] = ((uint8_t)frame->type_frame << 4) | (uint8_t)frame->action;
+    memcpy(bytes + 4, frame->data, frame->len - 1);
+    size = frame->len + 3;
   }
-  uint8_t bytes[5] = {0};
+  esp_err_t err = transfer(bytes, size, true,
+                           esp_timer_get_time() + TCP_IO_TIMEOUT_MS * 1000LL);
+  if (err != ESP_OK) selfiq_tcp_close(); /* Stream parcial: no reutilizar. */
+  return err;
+}
 
-  switch (send_info.op_type) {
-
-    case OPReqCredWifi: {
-      uint16_t header = htons(HEADER);
-      memcpy(bytes, &header, sizeof(HEADER));
-      bytes[2] = 2;
-      bytes[3] = eNoType << 4 | eReqWifi;
-      bytes[4] = 0; // solo estamos estamos indicando que queremos solciitar las
-                    // credenciales WIFI
-      ESP_LOGI(TAG, "TX solicitud: AB CD 02 01 00");
-
-    } break;
-    
-    case OPReqBroker{
-      // ahora queremos realizar la peticion de la IP:PORT del broker para poder conectarnos 
+esp_err_t tcp_receive_frame(TYPE_FORMAT_REQUEST_T *frame) {
+  if (!frame) return ESP_ERR_INVALID_ARG;
+  if (tcp_client.sock < 0 || !tcp_client.connected)
+    return ESP_ERR_INVALID_STATE;
+  uint8_t prefix[3], body[MAX_DATA + 1];
+  int64_t deadline = esp_timer_get_time() + TCP_IO_TIMEOUT_MS * 1000LL;
+  esp_err_t err = transfer(prefix, 3, false, deadline);
+  if (err != ESP_OK) goto fail;
+  uint16_t header = ((uint16_t)prefix[0] << 8) | prefix[1];
+  unsigned length = prefix[2];
+  if (length == 255) {
+    err = transfer(body, 2, false, deadline);
+    if (err != ESP_OK) goto fail;
+    if (header != ACK || body[0] != 255 || body[1] != 0) {
+      err = ESP_FAIL;
+      goto fail;
     }
-
-    case OP_ACK: {
-
-      uint16_t header = htons(ACK);
-      memcpy(bytes, &header, sizeof(ACK));
-      bytes[2] = 2;
-      bytes[3] = eRespACK << 4 | action_none;
-      bytes[4] = 0; // solo estamos estamos indicando que queremos solciitar las
-                    // credenciales WIFI
-      ESP_LOGI(TAG, "TX ACK de recepcion (no confirma conexion Wi-Fi final)");
-
-    } break;
-
-    case OP_NACK: {
-      uint16_t header = htons(ACK);
-      memcpy(bytes, &header, sizeof(ACK));
-      bytes[2] = 0xFF;
-      bytes[3] = eRespNACK << 4 | action_none;
-      bytes[4] = 0; // solo estamos estamos indicando que queremos solciitar las
-                    // credenciales WIFI
-      ESP_LOGI(TAG, "TX NACK de formato");
-    }break;
-
-    default:
-    return ESP_ERR_INVALID_ARG; break;
+    *frame = (TYPE_FORMAT_REQUEST_T){.header = ACK, .len = 255,
+                                   .type_frame = eRespNACK};
+    return ESP_OK;
   }
+  if ((header != ACK && header != HEADER) || length < 1 || length > MAX_DATA + 1) {
+    err = ESP_FAIL;
+    goto fail;
+  }
+  err = transfer(body, length, false, deadline);
+  if (err != ESP_OK) goto fail;
+  TYPE_FORMAT_REQUEST_T tmp = {.header = header, .len = length,
+                               .type_frame = body[0] >> 4,
+                               .action = body[0] & 15};
+  memcpy(tmp.data, body + 1, length - 1);
+  *frame = tmp;
+  return ESP_OK;
+fail:
+  selfiq_tcp_close();
+  return err;
+}
 
-  return transfer(bytes, sizeof(bytes), true,
-                  esp_timer_get_time() + TCP_IO_TIMEOUT_MS * 1000LL);
+esp_err_t tcp_request(const TYPE_FORMAT_REQUEST_T *request,
+                      TYPE_FORMAT_REQUEST_T *response) {
+  if (!request || !response) return ESP_ERR_INVALID_ARG;
+  esp_err_t err = tcp_send_frame(request);
+  return err == ESP_OK ? tcp_receive_frame(response) : err;
+}
+
+esp_err_t send_message(void) {
+  TYPE_FORMAT_REQUEST_T frame = {.header = HEADER, .len = 2,
+                                 .type_frame = eNoType};
+  switch (send_info.op_type) {
+  case OPReqCredWifi: frame.action = eReqWifi; break;
+  case OPReqBroker: frame.action = eReqBroker; break;
+  case OP_ACK:
+    frame.header = ACK;
+    frame.type_frame = eRespACK;
+    break;
+  case OP_NACK:
+    frame.header = ACK;
+    frame.type_frame = eRespNACK;
+    frame.len = 255;
+    break;
+  default: return ESP_ERR_INVALID_ARG;
+  }
+  return tcp_send_frame(&frame);
+}
+
+static void acknowledge(bool valid) {
+  TYPE_FORMAT_REQUEST_T frame = {.header = ACK,
+      .len = valid ? 2 : 255, .type_frame = valid ? eRespACK : eRespNACK};
+  esp_err_t err = tcp_send_frame(&frame);
+  if (err != ESP_OK) ESP_LOGW(TAG, "No se pudo enviar ACK/NACK: %s", esp_err_to_name(err));
 }
 
 esp_err_t tcp_request_wifi(selfiq_credentials_t *credentials) {
-  if (!credentials)
-    return ESP_ERR_INVALID_ARG;
-  send_info.op_type = OPReqCredWifi;
-  esp_err_t err = send_message();
-  if (err != ESP_OK)
-    return err;
-  ESP_LOGI(
-      TAG,
-      "Solicitud enviada; esperando cabecera y credenciales (limite %u ms)",
-      TCP_IO_TIMEOUT_MS);
-  uint8_t prefix[3], body[MAX_DATA + 1];
-  int64_t deadline = esp_timer_get_time() + TCP_IO_TIMEOUT_MS * 1000LL;
-  err = transfer(prefix, 3, false, deadline);
-  if (err != ESP_OK)
-    return err;
-  uint16_t header = (uint16_t)prefix[0] << 8 | prefix[1];
-  unsigned length = prefix[2];
-  ESP_LOGI(TAG, "RX cabecera=0x%04X LEN=%u", header, length);
-  if (header == ACK && length == 255) {
-    err = transfer(body, 2, false, deadline);
-    if (err != ESP_OK)
-      return err;
-    if (body[0] != 255 || body[1] != 0) {
-      ESP_LOGE(TAG, "NACK mal formado");
-      return ESP_FAIL;
-    }
-    ESP_LOGW(TAG, "RPI respondio NACK: aun no puede entregar credenciales. "
-                  "Compruebe que RPI conecto a la red final");
-    return ESP_ERR_INVALID_STATE;
-  }
-  if (header != ACK || length < 1 || length > MAX_DATA + 1) {
-    ESP_LOGE(TAG, "Cabecera o LEN fuera de rango; no se copian datos");
-    return ESP_FAIL;
-  }
-  err = transfer(body, length, false, deadline);
-  if (err != ESP_OK)
-    return err;
+  if (!credentials) return ESP_ERR_INVALID_ARG;
+  TYPE_FORMAT_REQUEST_T request = {.header = HEADER, .len = 2,
+                                   .action = eReqWifi};
+  TYPE_FORMAT_REQUEST_T response;
+  esp_err_t err = tcp_request(&request, &response);
+  if (err != ESP_OK) return err;
+  if (response.len == 255) return ESP_ERR_INVALID_STATE;
+  uint8_t body[MAX_DATA + 1];
+  body[0] = ((uint8_t)response.type_frame << 4) | response.action;
+  memcpy(body + 1, response.data, response.len - 1);
   const char *why = NULL;
-  if (!selfiq_decode_credentials(header, length, body, credentials, &why)) {
-    ESP_LOGE(TAG, "Respuesta rechazada: %s", why);
-    send_info.op_type = OP_NACK;
-    (void)send_message();
+  bool valid = selfiq_decode_credentials(response.header, response.len, body,
+                                         credentials, &why);
+  acknowledge(valid);
+  if (!valid) {
+    ESP_LOGE(TAG, "Credenciales rechazadas: %s", why);
     return ESP_FAIL;
   }
-  ESP_LOGI(TAG,
-           "Credenciales TLV validas: tipo=%u SSID=\"%s\" (sin mostrar "
-           "password/usuario)",
-           credentials->kind, credentials->ssid);
-  send_info.op_type = OP_ACK;
-  err = send_message();
-  if (err != ESP_OK)
-    ESP_LOGW(
-        TAG,
-        "No pudo enviarse ACK, pero las credenciales recibidas son validas");
   return ESP_OK;
+}
+
+esp_err_t tcp_request_broker(selfiq_broker_t *broker) {
+  if (!broker) return ESP_ERR_INVALID_ARG;
+  TYPE_FORMAT_REQUEST_T request = {.header = HEADER, .len = 2,
+                                   .action = eReqBroker};
+  TYPE_FORMAT_REQUEST_T response;
+  esp_err_t err = tcp_request(&request, &response);
+  if (err != ESP_OK) return err;
+  if (response.len == 255) return ESP_ERR_INVALID_STATE;
+  uint8_t body[MAX_DATA + 1];
+  body[0] = ((uint8_t)response.type_frame << 4) | response.action;
+  memcpy(body + 1, response.data, response.len - 1);
+  bool valid = selfiq_decode_broker(response.header, response.len, body, broker);
+  acknowledge(valid);
+  return valid ? ESP_OK : ESP_FAIL;
 }

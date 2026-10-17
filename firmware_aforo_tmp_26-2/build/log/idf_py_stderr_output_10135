@@ -1,0 +1,64 @@
+Command: ninja flash
+Traceback (most recent call last):
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/__init__.py", line 1362, in _main
+    main()
+    ~~~~^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/__init__.py", line 1256, in main
+    cli(args=args, esp=esp)
+    ~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/cli_util.py", line 346, in __call__
+    return super().__call__(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/rich_click/rich_command.py", line 402, in __call__
+    return super().__call__(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/click/core.py", line 1161, in __call__
+    return self.main(*args, **kwargs)
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/rich_click/rich_command.py", line 216, in main
+    rv = self.invoke(ctx)
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/click/core.py", line 1697, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/click/core.py", line 1443, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/click/core.py", line 788, in invoke
+    return __callback(*args, **kwargs)
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/click/decorators.py", line 33, in new_func
+    return f(get_current_context(), *args, **kwargs)
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/__init__.py", line 827, in write_flash_cli
+    write_flash(ctx.obj["esp"], addr_filename, **kwargs)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/cmds.py", line 1464, in write_flash
+    esp.flash_defl_block(block, seq, timeout=timeout)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/loader.py", line 145, in inner
+    return func(*args, **kwargs)
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/loader.py", line 1461, in flash_defl_block
+    self.check_command(
+    ~~~~~~~~~~~~~~~~~~^
+        f"write compressed data to flash after seq {seq}",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        timeout=timeout,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/loader.py", line 637, in check_command
+    val, data = self.command(op, data, chk, timeout=timeout)
+                ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/loader.py", line 567, in command
+    p = self.read()
+  File "/home/dmrx/.espressif/python_env/idf6.0_py3.14_env/lib/python3.14/site-packages/esptool/loader.py", line 503, in read
+    return next(self._slip_reader)
+StopIteration
+
+A fatal error occurred: The chip stopped responding.
+[31mCMake Error at /opt/esp-idf/components/esptool_py/run_serial_tool.cmake:67 (message):
+  
+  /home/dmrx/.espressif/python_env/idf6.0_py3.14_env/bin/python;-m;esptool;--chip;esp32
+  failed.
+
+
+[0m
