@@ -1,0 +1,11 @@
+# ESP-IDF
+firmware_aforo_tmp_26-2/build/
+firmware_aforo_tmp_26-2/main/build/
+firmware_aforo_tmp_26-2/.cache
+
+# Python
+__pycache__/
+*.pyc
+
+# Archivos temporales
+*.log
