@@ -1,4 +1,4 @@
-#include "dht11_lib.h"
+#include "dht20_lib.h"
 
 int wait_for_state(dht11_t dht11, int state, int timeout) {
   gpio_set_direction(dht11.dht11_pin, GPIO_MODE_INPUT);

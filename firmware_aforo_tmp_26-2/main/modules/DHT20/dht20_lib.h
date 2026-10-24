@@ -1,5 +1,5 @@
-#ifndef DHT11_LIB_H
-#define DHT11_LIB_H
+#ifndef DHT20_LIB_H
+#define DHT20_LIB_H
 
 #include "esp_log.h"
 #include <driver/gpio.h>
