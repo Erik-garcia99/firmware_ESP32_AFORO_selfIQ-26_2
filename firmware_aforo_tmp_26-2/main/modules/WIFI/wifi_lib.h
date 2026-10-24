@@ -19,7 +19,7 @@
 //++++++++++++++++++++++ macros
 // intentara conectarse con las credenicales actuales 5 veces, esperara 1
 // minutos antes de volver a petdir de nuevo las credenciales.
-#define ESP_MAX_RETRY 5
+#define ESP_MAX_RETRY 4 // 1 intento inicial + 4 reintentos = 5
 
 // bits
 #define WIFI_CONNECTED_BIT BIT0
@@ -33,7 +33,7 @@
 
 // tiempos del mecanismo de recuperacion
 #define WIFI_RECOVER_MS 60000 // espera entre reintentos al perder la red
-#define WIFI_RECOVER_TRIES 5  // reintentos antes de borrar credenciales
+#define WIFI_RECOVER_TRIES 5  // reservado; nunca borrar por fallo de red
 #define WIFI_CONNECT_TIMEOUT_MS                                                \
   60000                    // espera maxima al conectar a la red nueva
 #define TCP_RETRY_MS 60000 // espera antes de repetir el flujo con la RPI
