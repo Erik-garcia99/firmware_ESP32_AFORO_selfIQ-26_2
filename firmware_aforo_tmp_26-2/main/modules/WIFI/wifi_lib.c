@@ -68,26 +68,38 @@ void wifi_init_sta(void) {
 }
 
 esp_err_t wifi_set_credentials(const char *ssid, const char *password) {
-  if (!ssid || !password || !strlen(ssid) || strlen(ssid) > 32 ||
-      strlen(password) < 8 || strlen(password) > 63) return ESP_ERR_INVALID_ARG;
+  if(!ssid || !password || !strlen(ssid) || strlen(ssid) > SSID_LEN_MAX ||
+      strlen(password) < PSWD_LEN_MIN || strlen(password) > PSWD_LEN_MAX){
+        return ESP_ERR_INVALID_ARG;
+    } 
+  
   char *new_ssid = strdup(ssid), *new_password = strdup(password);
+  
   if (!new_ssid || !new_password) {
     free(new_ssid); free(new_password); return ESP_ERR_NO_MEM;
   }
+  
   s_switching = true;
+  
   xEventGroupClearBits(g_wifi_event_group, WIFI_STOPPED_BIT);
-  if (esp_wifi_disconnect() == ESP_OK)
+  
+  if (esp_wifi_disconnect() == ESP_OK){
     xEventGroupWaitBits(g_wifi_event_group, WIFI_STOPPED_BIT, pdTRUE, pdFALSE, pdMS_TO_TICKS(3000));
+  }
+  
   esp_wifi.connected = 0;
   wifi_config_t cfg = {0};
+  
   memcpy(cfg.sta.ssid, new_ssid, strlen(new_ssid)); // supports 32-byte SSID
   memcpy(cfg.sta.password, new_password, strlen(new_password));
+  
   cfg.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
   esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &cfg);
   memset(&cfg, 0, sizeof(cfg));
   xEventGroupClearBits(g_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT | WIFI_NO_CREDS_BIT);
   s_retry_num = 0;
   s_switching = false;
+  
   if (err != ESP_OK) {
     free(new_ssid); free(new_password);
     xEventGroupSetBits(g_wifi_event_group, WIFI_FAIL_BIT);

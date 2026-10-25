@@ -40,6 +40,10 @@
 #define TCP_UPDATE_TIMEOUT_MS                                                  \
   300000 // espera maxima de las credenciales de la RPI
 
+#define WIFI_NETWORK_ROUNDS 4U
+#define WIFI_ROUND_RETRY_MS 10000U
+
+
 //++++++++++++++++ grupos de eventos
 extern EventGroupHandle_t g_wifi_event_group;
 

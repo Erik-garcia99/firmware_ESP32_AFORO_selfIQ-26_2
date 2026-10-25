@@ -1,11 +1,23 @@
-#ifndef DHT20_LIB_H
-#define DHT20_LIB_H
+#ifndef DHT11_LIB_H
+#define DHT11_LIB_H
 
 #include "esp_log.h"
 #include <driver/gpio.h>
 #include <rom/ets_sys.h>
 #include <stdio.h>
 #include <string.h>
+
+
+#define DHT11_DATA_GPIO GPIO_NUM_4
+#define DHT11_READ_ATTEMPTS 3
+#define DHT11_TASK_STACK_BYTES 4096U
+#define DHT11_TASK_PRIORITY 4U
+#define DHT11_SAMPLE_INTERVAL_MS 15000U
+#define DHT11_EVENT_TEMPERATURE "temperature"
+#define DHT11_EVENT_HUMIDITY "humidity"
+
+
+
 /**
  * Structure containing readings and info about the dht11
  * @var dht11_pin the pin associated with the dht11
