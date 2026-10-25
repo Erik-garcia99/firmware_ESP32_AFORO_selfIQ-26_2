@@ -4,12 +4,14 @@ idf_component_register(
         "modules/WIFI/wifi_lib.c"
         "modules/TCP/tcp_lib.c"
         "modules/MQTT/mqtt_lib.c"
+        "modules/DHT11/dht11_lib.c"
 
     INCLUDE_DIRS
         "."
         "modules/WIFI"
         "modules/TCP"
         "modules/MQTT"
+        "modules/DHT11/"
 
     REQUIRES
         mdns
@@ -19,4 +21,5 @@ idf_component_register(
         nvs_flash
         lwip
         espressif__mqtt
+        esp_driver_gpio
 )
