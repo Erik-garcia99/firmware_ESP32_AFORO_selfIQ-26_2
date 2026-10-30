@@ -24,11 +24,15 @@
 #include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+
+//librerias propias
 #include "global.h"
 #include "modules/WIFI/wifi_lib.h"
 #include "modules/TCP/tcp_lib.h"
 #include "modules/MQTT/mqtt_lib.h"
 #include "modules/DHT11/dht11_lib.h"
+#include "modules/HLK-LD2450/ld2450.h"
 
 /* Globals kept for the existing TCP library; recovery exchanges below have a
  * private socket and never run recv_task concurrently on that socket. */
@@ -165,6 +169,24 @@ static void dht11_telemetry_task(void *unused) {
   }
 }
 
+static void on_crossing(bool entry) {
+  esp_err_t err = mqtt_queue_value(entry ? "entry" : "exit", 1.0);
+  if (err != ESP_OK)
+    ESP_LOGD(TAG, "[LD2450] cruce no publicado: %s", esp_err_to_name(err));
+  else
+    ESP_LOGI(TAG, "[LD2450] %s detectada", entry ? "Entrada" : "Salida");
+}
+
+static void aforo_telemetry_task(void *unused) {
+  (void)unused;
+  while (1) {
+    mqtt_queue_value(LD2450_EVENT_OCCUPANCY, (double)ld2450_occupancy());
+    mqtt_queue_value("entries", (double)ld2450_entries());
+    mqtt_queue_value("exits", (double)ld2450_exits());
+    vTaskDelay(pdMS_TO_TICKS(LD2450_TELEMETRY_INTERVAL_MS));
+  }
+}
+
 void app_main(void) {
   /* Do not erase NVS automatically: identity/pending configuration matter. */
   esp_err_t err = nvs_flash_init();
@@ -176,6 +198,22 @@ void app_main(void) {
   if (xTaskCreate(dht11_telemetry_task, "dht11_telemetry", DHT11_TASK_STACK_BYTES,
                   NULL, DHT11_TASK_PRIORITY, NULL) != pdPASS)
     ESP_LOGE(TAG, "[DHT11] no se pudo crear tarea de telemetria");
+
+  ESP_ERROR_CHECK(ld2450_init());
+  ld2450_set_crossing_callback(on_crossing);
+  
+  if (xTaskCreate(ld2450_task, "ld2450_task", 4096, NULL, 5, NULL) != pdPASS){
+    ESP_LOGE(TAG, "[LD2450] no se pudo crear tarea de radar");
+  }
+
+  if (xTaskCreate(aforo_telemetry_task, "aforo_telemetry",
+                  LD2450_TELEMETRY_TASK_STACK_BYTES, NULL,
+                  LD2450_TELEMETRY_TASK_PRIORITY, NULL) != pdPASS){
+    ESP_LOGE(TAG, "[LD2450] no se pudo crear tarea de telemetria");
+  }
+    
+
+  
   bool on_ap = false;
   unsigned rounds = 0;
   TickType_t last_probe = 0, last_mqtt = 0;
