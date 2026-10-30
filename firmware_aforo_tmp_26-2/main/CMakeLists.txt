@@ -5,6 +5,7 @@ idf_component_register(
         "modules/TCP/tcp_lib.c"
         "modules/MQTT/mqtt_lib.c"
         "modules/DHT11/dht11_lib.c"
+        "modules/HLK-LD2450/ld2450.c"
 
     INCLUDE_DIRS
         "."
@@ -12,6 +13,7 @@ idf_component_register(
         "modules/TCP"
         "modules/MQTT"
         "modules/DHT11/"
+        "modules/HLK-LD2450"
 
     REQUIRES
         mdns
@@ -22,4 +24,5 @@ idf_component_register(
         lwip
         espressif__mqtt
         esp_driver_gpio
+        esp_driver_uart
 )
