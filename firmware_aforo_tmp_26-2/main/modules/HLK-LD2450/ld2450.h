@@ -100,6 +100,14 @@
 /* Latido sin cambios: mantiene fresca la lectura en la nube (el backend la
  * marca obsoleta a los 20 s) sin reenviar el mismo valor cada 2 s. */
 #define LD2450_KEEPALIVE_INTERVAL_MS      8000U
+
+/* Lado "dentro" de la línea de la puerta, respecto a la Y del radar.
+ *   +1: "dentro" es Y creciente (sensor apuntando hacia el interior).
+ *   -1: "dentro" es Y decreciente (sensor montado dentro apuntando hacia la
+ *       puerta/salida). Con +1 en esa instalación, SALIR se contaba como
+ *       entrada y el aforo solo subía.
+ * Si al salir el contador sube, cambia este signo. */
+#define LD2450_CROSS_INSIDE_SIGN          (-1)
 #define LD2450_TELEMETRY_TASK_STACK_BYTES 3072U
 #define LD2450_TELEMETRY_TASK_PRIORITY    4U
 #define LD2450_EVENT_OCCUPANCY            "occupancy"

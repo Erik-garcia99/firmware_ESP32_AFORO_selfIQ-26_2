@@ -42,6 +42,8 @@ static int     s_frame_idx   = 0;
 static int     s_entries     = 0;
 static int     s_exits       = 0;
 static int     s_occupancy   = 0;
+/* Pide al tracker que olvide sus estados tras un ajuste manual. */
+static volatile bool s_relearn = false;
 
 static void (*s_crossing_cb)(bool entry) = NULL;
 
@@ -225,12 +227,16 @@ void ld2450_reset_counter(void) {
     s_entries = 0;
     s_exits = 0;
     s_occupancy = 0;
+    s_relearn = true;
     aforo_save_nvs();
 }
 
 void ld2450_adjust_occupancy(int value) {
     if (value < 0) value = 0;
     s_occupancy = value;
+    /* El conteo manual no coincide con los tracks actuales: se re-aprenden
+     * para que el próximo cruce se mida contra el nuevo punto de partida. */
+    s_relearn = true;
     aforo_save_nvs();
 }
 
@@ -449,6 +455,17 @@ static int door_line_y(void) {
 static void process_crossings(const ld2450_frame_t *frame) {
     s_frame_idx++;
 
+    // Tras un ajuste manual el tracker vuelve a aprender: se descartan los
+    // estados viejos para no contar un cruce con información inconsistente.
+    if (s_relearn) {
+        s_relearn = false;
+        for (int i = 0; i < MAX_TRACKS; i++) {
+            s_tracks[i].active   = false;
+            s_tracks[i].state    = 0;
+            s_tracks[i].cooldown = 0;
+        }
+    }
+
     // decrementar cooldowns
     for (int i = 0; i < MAX_TRACKS; i++) {
         if (s_tracks[i].active && s_tracks[i].cooldown > 0) s_tracks[i].cooldown--;
@@ -466,8 +483,6 @@ static void process_crossings(const ld2450_frame_t *frame) {
     }
 
     int line = door_line_y();
-    int in_thr = line + CROSS_IN_MM;
-    int out_thr = line - CROSS_OUT_MM;
 
     // emparejar objetivos con tracks por nearest-neighbor
     bool matched_target[LD2450_TARGET_COUNT];
@@ -477,6 +492,8 @@ static void process_crossings(const ld2450_frame_t *frame) {
 
     // greedy: para cada target, buscar el track más cercano no emparejado dentro del gate
     for (int t = 0; t < n_targets; t++) {
+        // profundidad firmada respecto a la línea: positiva = "dentro"
+        int depth = LD2450_CROSS_INSIDE_SIGN * ((int)ty[t] - line);
         int best = -1;
         int best_dist = TRACK_GATE_MM;
         for (int k = 0; k < MAX_TRACKS; k++) {
@@ -500,22 +517,26 @@ static void process_crossings(const ld2450_frame_t *frame) {
             // máquina de estados
             if (tr->state == 0) {
                 // desconocido → establecer estado sin contar
-                if (ty[t] >= in_thr) tr->state = 2;
-                else if (ty[t] <= out_thr) tr->state = 1;
-            } else if (tr->state == 1 && ty[t] >= in_thr) {
+                if (depth >= CROSS_IN_MM) tr->state = 2;
+                else if (depth <= -CROSS_OUT_MM) tr->state = 1;
+            } else if (tr->state == 1 && depth >= CROSS_IN_MM) {
                 // fuera → dentro: entrada
                 tr->state = 2;
                 s_entries++;
                 s_occupancy++;
                 tr->cooldown = 5;
+                ESP_LOGI(TAG, "Cruce ENTRADA: y=%d mm (linea=%d, prof=%+d mm)",
+                         ty[t], line, depth);
                 if (s_crossing_cb) s_crossing_cb(true);
                 aforo_save_nvs();
-            } else if (tr->state == 2 && ty[t] <= out_thr) {
+            } else if (tr->state == 2 && depth <= -CROSS_OUT_MM) {
                 // dentro → fuera: salida
                 tr->state = 1;
                 s_exits++;
                 if (s_occupancy > 0) s_occupancy--;
                 tr->cooldown = 5;
+                ESP_LOGI(TAG, "Cruce SALIDA: y=%d mm (linea=%d, prof=%+d mm)",
+                         ty[t], line, depth);
                 if (s_crossing_cb) s_crossing_cb(false);
                 aforo_save_nvs();
             }
@@ -532,13 +553,14 @@ static void process_crossings(const ld2450_frame_t *frame) {
         }
         if (slot < 0) continue;
         track_t *tr = &s_tracks[slot];
+        int depth = LD2450_CROSS_INSIDE_SIGN * ((int)ty[t] - line);
         tr->active = true;
         tr->x = tx[t];
         tr->y = ty[t];
         tr->last_seen = s_frame_idx;
         tr->cooldown = 0;
-        if (ty[t] >= in_thr) tr->state = 2;
-        else if (ty[t] <= out_thr) tr->state = 1;
+        if (depth >= CROSS_IN_MM) tr->state = 2;
+        else if (depth <= -CROSS_OUT_MM) tr->state = 1;
         else tr->state = 0;
     }
 
