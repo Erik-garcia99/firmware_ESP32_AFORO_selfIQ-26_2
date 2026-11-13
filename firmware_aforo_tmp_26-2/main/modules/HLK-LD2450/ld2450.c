@@ -228,6 +228,12 @@ void ld2450_reset_counter(void) {
     aforo_save_nvs();
 }
 
+void ld2450_adjust_occupancy(int value) {
+    if (value < 0) value = 0;
+    s_occupancy = value;
+    aforo_save_nvs();
+}
+
 esp_err_t ld2450_set_roi(const ld2450_roi_t *roi) {
     if (!roi || roi->x_min_mm > roi->x_max_mm || roi->y_min_mm > roi->y_max_mm)
         return ESP_ERR_INVALID_ARG;

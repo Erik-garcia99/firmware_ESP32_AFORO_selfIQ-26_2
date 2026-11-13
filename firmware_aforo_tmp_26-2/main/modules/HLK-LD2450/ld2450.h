@@ -197,6 +197,7 @@ void ld2450_set_crossing_callback(void (*cb)(bool entry));
  * @brief Reinicia el contador acumulado (entradas, salidas, aforo) y lo guarda.
  */
 void ld2450_reset_counter(void);
+void ld2450_adjust_occupancy(int value);
 
 /**
  * @brief Cambia la ROI en caliente (por ejemplo, desde MQTT).

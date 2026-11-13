@@ -20,6 +20,7 @@
 #include<global.h>
 #include "modules/MQTT/mqtt_lib.h"
 #include "modules/WIFI/wifi_lib.h"
+#include "modules/HLK-LD2450/ld2450.h"
 
 
 static const char *TAG = "selfiq_mqtt";
@@ -193,6 +194,37 @@ static void reset_identity(esp_mqtt_event_handle_t event) {
   ESP_LOGI(TAG, "Restablecimiento de identidad: %s; Wi-Fi y firmware conservados", esp_err_to_name(err));
 }
 
+static void adjust_occupancy_counter(esp_mqtt_event_handle_t event) {
+  if (event->retain || event->current_data_offset != 0 ||
+      event->data_len != event->total_data_len ||
+      event->data_len != MQTT_OCCUPANCY_ADJUST_REQUEST_BYTES)
+    return;
+  char topic[MAX_TOPIC_LEN];
+  if (!s_registered) return;
+  snprintf(topic, sizeof(topic), "selfiq/%s/%s/control/command", s_branch_id, s_esp_id);
+  if (!topic[0] || event->topic_len != (int)strlen(topic) ||
+      memcmp(event->topic, topic, event->topic_len))
+    return;
+  const uint8_t *wire = (const uint8_t *)event->data;
+  if (wire[0] != MQTT_REQ_OCCUPANCY_ADJUST)
+    return;
+  int32_t value = (int32_t)((uint32_t)wire[1] | ((uint32_t)wire[2] << 8) |
+                            ((uint32_t)wire[3] << 16) | ((uint32_t)wire[4] << 24));
+  /* Ajuste autorizado del contador de aforo (no borra identidad ni NVS de red). */
+  ld2450_adjust_occupancy(value);
+  /* Publica el nuevo valor para que la nube/backend se sincronicen. */
+  esp_err_t qerr = mqtt_queue_value(LD2450_EVENT_OCCUPANCY, (double)value);
+  if (qerr != ESP_OK)
+    ESP_LOGW(TAG, "[AFORO] ajuste publicado localmente pero no encolado: %s", esp_err_to_name(qerr));
+
+  char result_topic[MAX_TOPIC_LEN];
+  uint8_t payload[MQTT_OCCUPANCY_ADJUST_RESULT_BYTES] = {
+      MQTT_RESP_OCCUPANCY_ADJUST, 0, 0U};
+  snprintf(result_topic, sizeof(result_topic), "%.*sresult", (int)strlen(topic) - 7, topic);
+  esp_mqtt_client_publish(s_client, result_topic, (const char *)payload, sizeof(payload), 1, 0);
+  ESP_LOGI(TAG, "[AFORO] contador ajustado a %d por comando autorizado", value);
+}
+
 static void mqtt_event(void *args, esp_event_base_t base, int32_t event_id,
                        void *event_data) {
   esp_mqtt_event_handle_t event = event_data;
@@ -225,6 +257,7 @@ static void mqtt_event(void *args, esp_event_base_t base, int32_t event_id,
     break;
   case MQTT_EVENT_DATA: {
     reset_identity(event);
+    adjust_occupancy_counter(event);
     if (event->topic_len == (int)strlen(s_ack_topic) && s_ack_topic[0] &&
         !memcmp(event->topic, s_ack_topic, event->topic_len)) {
       if (event->current_data_offset == 0 &&
