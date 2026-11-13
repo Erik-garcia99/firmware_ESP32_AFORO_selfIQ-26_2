@@ -8,7 +8,7 @@
 #include <string.h>
 
 
-#define DHT11_DATA_GPIO GPIO_NUM_22
+#define DHT11_DATA_GPIO GPIO_NUM_10
 #define DHT11_READ_ATTEMPTS 3
 #define DHT11_TASK_STACK_BYTES 4096U
 #define DHT11_TASK_PRIORITY 4U
@@ -30,23 +30,23 @@ typedef struct {
   float humidity;
 } dht11_t;
 /**
- * @brief Wait on pin until it reaches the specified state
+ * @brief Wait on an already configured input pin until it reaches the state
  * @return returns either the time waited or -1 in the case of a timeout
  * @param state state to wait for
  * @param timeout if counter reaches timeout the function returns -1
  */
 int wait_for_state(dht11_t dht11, int state, int timeout);
 /**
- * @brief Holds the pin low fo the specified duration
+ * @brief Holds an already configured open-drain pin low, then releases it
  * @param hold_time_us time to hold the pin low for in microseconds
  */
 void hold_low(dht11_t dht11, int hold_time_us);
 /**
  * @brief The function for reading temperature and humidity values from the
  * dht11
- * @note  This function is blocking, ie: it forces the cpu to busy wait for the
- * duration necessary to finish comms with the sensor.
- * @note  Wait for atleast 2 seconds between reads
+ * @note Call from task context, with a single caller per sensor. Each attempt
+ * waits at least 2 seconds using vTaskDelay. Only the response capture (about
+ * 4 ms) runs in a critical section. An external DATA pull-up is recommended.
  * @param connection_timeout the number of connection attempts before declaring
  * a timeout
  */

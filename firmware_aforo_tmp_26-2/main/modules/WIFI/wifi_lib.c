@@ -64,6 +64,14 @@ void wifi_init_sta(void) {
   ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL, NULL));
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_start());
+#if CONFIG_IDF_TARGET_ESP32C3
+  /* SuperMini probado: autentica a 8.5 dBm, falla a 20 dBm.
+   * La API usa unidades de 0.25 dBm y requiere Wi-Fi iniciado. */
+  ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(34));
+  int8_t tx_power = 0;
+  ESP_ERROR_CHECK(esp_wifi_get_max_tx_power(&tx_power));
+  ESP_LOGI(TAG, "[NETWORK] ESP32-C3 limite TX=%.2f dBm", tx_power / 4.0);
+#endif
   s_initialized = true;
 }
 
