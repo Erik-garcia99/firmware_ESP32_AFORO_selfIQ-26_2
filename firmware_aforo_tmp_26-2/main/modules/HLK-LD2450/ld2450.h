@@ -13,9 +13,9 @@
 #include "esp_err.h"
 
 // Configuración por defecto (puedes sobreescribir en menuconfig)
-#define LD2450_UART_PORT        UART_NUM_2
-#define LD2450_UART_TX_GPIO     17      // Ajusta según tu hardware
-#define LD2450_UART_RX_GPIO     16      // Ajusta según tu hardware
+#define LD2450_UART_PORT        UART_NUM_1   // ESP32-C3 solo tiene UART0 y UART1
+#define LD2450_UART_TX_GPIO     4       // ESP32-C3: GPIO 4
+#define LD2450_UART_RX_GPIO     5       // ESP32-C3: GPIO 5
 #define LD2450_UART_BAUD_RATE   256000
 #define LD2450_UART_BUF_SIZE    1024
 
