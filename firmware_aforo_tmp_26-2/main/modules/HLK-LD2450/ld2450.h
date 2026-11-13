@@ -97,6 +97,9 @@
 
 // Telemetría de aforo (F-05: conteo en tiempo real <= 2 s)
 #define LD2450_TELEMETRY_INTERVAL_MS      2000U   // una muestra cada 2 s
+/* Latido sin cambios: mantiene fresca la lectura en la nube (el backend la
+ * marca obsoleta a los 20 s) sin reenviar el mismo valor cada 2 s. */
+#define LD2450_KEEPALIVE_INTERVAL_MS      8000U
 #define LD2450_TELEMETRY_TASK_STACK_BYTES 3072U
 #define LD2450_TELEMETRY_TASK_PRIORITY    4U
 #define LD2450_EVENT_OCCUPANCY            "occupancy"

@@ -50,6 +50,12 @@
 #define MQTT_REGISTRATION_PAYLOAD_LEN (MQTT_REGISTRATION_BRANCH_OFFSET + UUID_TEXT_LEN)
 #define MQTT_REGISTRATION_BUFFER_SIZE (MQTT_REGISTRATION_PAYLOAD_LEN + TEXT_TERMINATOR_SIZE)
 #define MQTT_EVENT_TYPE_MAX_LEN 32U
+/* Cada cuánto se intenta vaciar la cola RAM de telemetría. Un valor de 1 s
+ * mantiene la muestra fresca sin cambiar el volumen enviado (solo se publica
+ * lo que ya está encolado). El ACK libera el espacio; si no llega, el mensaje
+ * se reintenta pasado MQTT_RETRY_INTERVAL_MS. */
+#define MQTT_FLUSH_INTERVAL_MS 1000U
+/* Cadencia lenta: estado "online" y reintento de registro. */
 #define MQTT_RETRY_INTERVAL_MS 15000U
 #define MQTT_RETRY_TASK_STACK 4096U
 #define MQTT_RETRY_TASK_PRIORITY 4U

@@ -49,6 +49,7 @@ static uint32_t s_boot[MQTT_BOOT_WORDS], s_sequence;
 static struct {
   char id[MQTT_EVENT_ID_SIZE];
   char payload[EVENT_BYTES];
+  TickType_t sent; /* 0 = nunca publicado; si no, último intento de envío */
 } s_pending[PENDING_COUNT];
 
 
@@ -396,36 +397,61 @@ esp_err_t mqtt_queue_value(const char *event_type, double value) {
 
   // Marcar el espacio como ocupado solo cuando el mensaje está completo.
   strcpy(s_pending[slot].id, event_id);
+  s_pending[slot].sent = 0; /* pendiente de primer envío */
 
   xSemaphoreGive(s_pending_lock);
   return ESP_OK;
 }
 
 static void registration_retry(void *param) {
+  (void)param;
   char payload[EVENT_BYTES], topic[MQTT_ACK_TOPIC_SIZE];
+  const uint32_t slow_every =
+      (MQTT_RETRY_INTERVAL_MS + MQTT_FLUSH_INTERVAL_MS - 1U) /
+      MQTT_FLUSH_INTERVAL_MS;
+  uint32_t fast_ticks = 0;
+
   while (1) {
-    vTaskDelay(pdMS_TO_TICKS(MQTT_RETRY_INTERVAL_MS));
+    vTaskDelay(pdMS_TO_TICKS(MQTT_FLUSH_INTERVAL_MS));
+    bool slow = (++fast_ticks >= slow_every);
+    if (slow)
+      fast_ticks = 0;
+
     xSemaphoreTake(s_client_lock, portMAX_DELAY);
     if (s_running && s_mqtt_connected) {
       if (!s_registered) {
-        if (!s_reply_ready)
-          s_reply_sub_id =
-              esp_mqtt_client_subscribe(s_client, s_reply_topic, 1);
-        else
-          send_registration();
+        if (slow) {
+          if (!s_reply_ready)
+            s_reply_sub_id =
+                esp_mqtt_client_subscribe(s_client, s_reply_topic, 1);
+          else
+            send_registration();
+        }
       } else {
-        snprintf(topic, sizeof(topic), "selfiq/%s/%s/%s/status", s_branch_id,
-                 s_esp_id, NODE_MODULE);
-        esp_mqtt_client_publish(s_client, topic, "online", 6, 1, 0);
+        if (slow) {
+          snprintf(topic, sizeof(topic), "selfiq/%s/%s/%s/status", s_branch_id,
+                   s_esp_id, NODE_MODULE);
+          esp_mqtt_client_publish(s_client, topic, "online", 6, 1, 0);
+        }
+        /* Vaciar la cola cada MQTT_FLUSH_INTERVAL_MS: la muestra sale en ~1 s
+         * en vez de esperar hasta 15 s. Un mensaje ya enviado y sin ACK se
+         * reintenta recién pasado MQTT_RETRY_INTERVAL_MS para no duplicar. */
         snprintf(topic, sizeof(topic), "selfiq/%s/%s/%s/telemetry", s_branch_id,
                  s_esp_id, NODE_MODULE);
+        TickType_t now = xTaskGetTickCount();
         for (int i = 0; i < PENDING_COUNT; ++i) {
           xSemaphoreTake(s_pending_lock, portMAX_DELAY);
           bool used = s_pending[i].id[0] != 0;
-          if (used)
+          bool ready = used &&
+                       (s_pending[i].sent == 0 ||
+                        (now - s_pending[i].sent) >=
+                            pdMS_TO_TICKS(MQTT_RETRY_INTERVAL_MS));
+          if (ready) {
             memcpy(payload, s_pending[i].payload, sizeof(payload));
+            s_pending[i].sent = now;
+          }
           xSemaphoreGive(s_pending_lock);
-          if (used)
+          if (ready)
             esp_mqtt_client_publish(s_client, topic, payload, 0, 1, 0);
         }
       }

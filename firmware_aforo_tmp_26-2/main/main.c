@@ -179,10 +179,35 @@ static void on_crossing(bool entry) {
 
 static void aforo_telemetry_task(void *unused) {
   (void)unused;
+  int last_occ = -1, last_entries = -1, last_exits = -1;
+  TickType_t last_sent = 0;
+
   while (1) {
-    mqtt_queue_value(LD2450_EVENT_OCCUPANCY, (double)ld2450_occupancy());
-    mqtt_queue_value("entries", (double)ld2450_entries());
-    mqtt_queue_value("exits", (double)ld2450_exits());
+    int occ = ld2450_occupancy();
+    int entries = ld2450_entries();
+    int exits = ld2450_exits();
+    TickType_t now = xTaskGetTickCount();
+    bool keepalive = last_sent == 0 ||
+                     (now - last_sent) >= pdMS_TO_TICKS(LD2450_KEEPALIVE_INTERVAL_MS);
+    bool changed = occ != last_occ || entries != last_entries || exits != last_exits;
+
+    /* Publicar el cambio de inmediato y, si nada cambió, solo un latido.
+     * Evita mandar el mismo valor cada 2 s a la nube. */
+    if (changed || keepalive) {
+      if (occ != last_occ || keepalive)
+        mqtt_queue_value(LD2450_EVENT_OCCUPANCY, (double)occ);
+      if (entries != last_entries || keepalive)
+        mqtt_queue_value("entries", (double)entries);
+      if (exits != last_exits || keepalive)
+        mqtt_queue_value("exits", (double)exits);
+      ESP_LOGI(TAG, "[LD2450] telemetria aforo=%d E=%d S=%d (%s)",
+               occ, entries, exits, changed ? "cambio" : "latido");
+      last_occ = occ;
+      last_entries = entries;
+      last_exits = exits;
+      last_sent = now;
+    }
+
     vTaskDelay(pdMS_TO_TICKS(LD2450_TELEMETRY_INTERVAL_MS));
   }
 }
